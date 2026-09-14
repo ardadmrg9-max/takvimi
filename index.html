@@ -317,10 +317,8 @@
   var _iconDayNum = _iconNow.getDate();
   var _iconMonthAbbr = ['OCA','ŞUB','MAR','NİS','MAY','HAZ','TEM','AĞU','EYL','EKİ','KAS','ARA'][_iconNow.getMonth()];
   var iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">'
-    + '<rect width="192" height="192" rx="40" fill="#ffffff"/>'
-    + '<path d="M0 40 A40 40 0 0 1 40 0 H152 A40 40 0 0 1 192 40 V56 H0 Z" fill="#e0101f"/>'
-    + '<text x="96" y="40" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="20" font-weight="700" letter-spacing="1" fill="#ffffff" text-anchor="middle">'+_iconMonthAbbr+'</text>'
-    + '<text x="96" y="146" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="98" font-weight="600" fill="#111111" text-anchor="middle">'+_iconDayNum+'</text>'
+    + '<rect width="192" height="192" rx="42" fill="#0a0a0c"/>'
+    + '<circle cx="96" cy="96" r="70" fill="none" stroke="#e0101f" stroke-width="3"/>'
     + '</svg>';
   var iconUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(iconSvg)));
   document.getElementById('appleTouchIcon').setAttribute('href', iconUrl);
