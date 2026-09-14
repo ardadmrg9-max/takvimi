@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Kalbinin Takvimi</title>
+<title>Takvim</title>
 
 <!-- iOS PWA -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Kalbinin Takvimi">
+<meta name="apple-mobile-web-app-title" content="Takvim">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0a0a0c">
 <link rel="apple-touch-icon" id="appleTouchIcon">
@@ -159,9 +159,9 @@
     </button>
   </div>
 
-  <button id="streakChip" class="press glass w-full rounded-2xl px-4 py-3 mb-6 flex items-center gap-2.5 text-left">
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="var(--accent-2)" stroke="var(--accent-2)" stroke-width="1.5" stroke-linejoin="round" class="shrink-0"><path d="M12.1 21.35C9.3 19 3 14.28 3 9.5A5.5 5.5 0 0 1 12 5.5a5.5 5.5 0 0 1 9 4c0 4.78-6.3 9.5-9.1 11.85l-.9.65z"/></svg>
-    <span class="text-[13.5px] text-[var(--text-dim)]" id="streakText">Birlikte olduğumuz gün sayısını ayarlamak için dokun</span>
+  <button id="streakChip" class="press glass w-full rounded-2xl px-4 py-3.5 mb-6 flex items-center justify-center gap-2.5">
+    <span class="serif font-semibold leading-none" style="font-size:30px; color:var(--accent-2);" id="streakNumber">—</span>
+    <span class="text-[12px] text-[var(--text-dimmer)]" id="streakSuffix"></span>
   </button>
   <section id="screen-live">
     <!-- saat -->
@@ -309,14 +309,18 @@
 (function(){
 
   /* ============ AYARLANABİLİR BAŞLIK ============ */
-  var APP_NAME = "Kalbinin Takvimi";
+  var APP_NAME = "Takvim";
   document.title = APP_NAME;
 
-  /* ============ İKON / MANIFEST (tek dosya PWA) ============ */
+  /* ============ İKON / MANIFEST (tek dosya PWA, sıradan takvim görünümü) ============ */
+  var _iconNow = new Date();
+  var _iconDayNum = _iconNow.getDate();
+  var _iconMonthAbbr = ['OCA','ŞUB','MAR','NİS','MAY','HAZ','TEM','AĞU','EYL','EKİ','KAS','ARA'][_iconNow.getMonth()];
   var iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">'
-    + '<rect width="192" height="192" rx="42" fill="#0a0a0c"/>'
-    + '<circle cx="96" cy="96" r="70" fill="none" stroke="#e0101f" stroke-width="3"/>'
-    + '<text x="96" y="116" font-family="Georgia, serif" font-size="84" fill="#f4f3f0" text-anchor="middle">K</text>'
+    + '<rect width="192" height="192" rx="40" fill="#ffffff"/>'
+    + '<path d="M0 40 A40 40 0 0 1 40 0 H152 A40 40 0 0 1 192 40 V56 H0 Z" fill="#e0101f"/>'
+    + '<text x="96" y="40" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="20" font-weight="700" letter-spacing="1" fill="#ffffff" text-anchor="middle">'+_iconMonthAbbr+'</text>'
+    + '<text x="96" y="146" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="98" font-weight="600" fill="#111111" text-anchor="middle">'+_iconDayNum+'</text>'
     + '</svg>';
   var iconUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(iconSvg)));
   document.getElementById('appleTouchIcon').setAttribute('href', iconUrl);
@@ -576,9 +580,11 @@
 
   /* ============ BİRLİKTE OLUNAN GÜN SAYACI ============ */
   function renderStreak(){
-    var el = document.getElementById('streakText');
+    var numEl = document.getElementById('streakNumber');
+    var suffixEl = document.getElementById('streakSuffix');
     if(!state.data.startDate){
-      el.textContent = 'Birlikte olduğumuz gün sayısını ayarlamak için dokun';
+      numEl.textContent = '＋';
+      suffixEl.textContent = 'başlangıç günü seç';
       return;
     }
     var start = new Date(state.data.startDate + 'T00:00:00');
@@ -587,7 +593,8 @@
     var nowMid = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     var days = Math.floor((nowMid - startMid) / 86400000) + 1;
     if(days < 1) days = 1;
-    el.textContent = 'Birlikte olduğumuzun ' + days + '. günü';
+    numEl.textContent = days;
+    suffixEl.textContent = 'gün';
   }
 
   var streakModal = document.getElementById('streakModal');
