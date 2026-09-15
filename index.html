@@ -5,28 +5,28 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Takvim</title>
 
-<!-- iOS PWA -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Takvim">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#0a0a0c">
+<meta name="theme-color" content="#08080a">
 <link rel="apple-touch-icon" id="appleTouchIcon">
 <link rel="icon" id="faviconIcon">
 <link rel="manifest" id="manifestLink">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
 <style>
   :root{
     --bg:#08080a;
-    --bg-elev:#121215;
     --card: rgba(255,255,255,0.045);
-    --card-strong: rgba(255,255,255,0.07);
+    --card-strong: rgba(255,255,255,0.075);
     --card-border: rgba(255,255,255,0.09);
     --accent:#e0101f;
     --accent-2:#ff4650;
@@ -36,17 +36,12 @@
     --text-dimmer:#6c6b75;
     --gold:#c9a24b;
   }
-
   *{ -webkit-tap-highlight-color: transparent; box-sizing:border-box; }
-
   html,body{
-    background:var(--bg);
-    color:var(--text);
+    background:var(--bg); color:var(--text);
     font-family:'Inter',system-ui,sans-serif;
-    overscroll-behavior:none;
-    -webkit-font-smoothing:antialiased;
+    overscroll-behavior:none; -webkit-font-smoothing:antialiased;
   }
-
   body{
     min-height:100dvh;
     background:
@@ -54,830 +49,950 @@
       radial-gradient(circle at 100% 30%, rgba(201,162,75,0.07), transparent 45%),
       var(--bg);
   }
-
   .serif{ font-family:'Playfair Display', serif; }
-
   ::selection{ background:var(--accent); color:#fff; }
+  ::-webkit-scrollbar{ width:0; height:0; }
 
-  /* scrollbar */
-  ::-webkit-scrollbar{ width:0px; height:0px; }
-
-  .glass{
-    background: var(--card);
-    border: 1px solid var(--card-border);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-  }
-  .glass-strong{
-    background: var(--card-strong);
-    border: 1px solid var(--card-border);
-    backdrop-filter: blur(22px);
-    -webkit-backdrop-filter: blur(22px);
-  }
+  .glass{ background:var(--card); border:1px solid var(--card-border); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); }
+  .glass-strong{ background:var(--card-strong); border:1px solid var(--card-border); backdrop-filter:blur(22px); -webkit-backdrop-filter:blur(22px); }
 
   .press{ transition: transform .15s cubic-bezier(.34,1.56,.64,1), opacity .15s ease; }
   .press:active{ transform: scale(.94); opacity:.85; }
-
   .tab-btn{ transition: color .25s ease, transform .15s ease; }
   .tab-btn:active{ transform: scale(.92); }
 
-  .pulse-dot{
-    box-shadow: 0 0 0 0 rgba(224,16,31,0.6);
-    animation: pulseDot 2.2s infinite;
+  /* ---- AÇILIŞ ANİMASYONU ---- */
+  #splash{
+    position:fixed; inset:0; z-index:300; display:flex; align-items:center; justify-content:center;
+    background:var(--bg);
+    transition: opacity .6s ease, transform .6s cubic-bezier(.19,1,.22,1);
   }
-  @keyframes pulseDot{
-    0%{ box-shadow: 0 0 0 0 rgba(224,16,31,0.55); }
-    70%{ box-shadow: 0 0 0 14px rgba(224,16,31,0); }
-    100%{ box-shadow: 0 0 0 0 rgba(224,16,31,0); }
+  #splash.gone{ opacity:0; transform:scale(1.06); pointer-events:none; }
+  .splash-card{
+    width:104px; height:104px; border-radius:26px; background:#fff; position:relative; overflow:hidden;
+    box-shadow:0 30px 70px -20px rgba(224,16,31,0.55);
+    animation: splashPop .85s cubic-bezier(.19,1,.22,1) both;
+  }
+  .splash-card .top{ height:28px; background:var(--accent); display:flex; align-items:center; justify-content:center; }
+  .splash-card .top span{ font-size:11px; font-weight:700; letter-spacing:1px; color:#fff; }
+  .splash-card .num{ display:flex; align-items:center; justify-content:center; height:76px; font-size:46px; font-weight:600; color:#111; }
+  @keyframes splashPop{
+    0%{ opacity:0; transform: scale(.7) rotate(-6deg); }
+    60%{ opacity:1; transform: scale(1.04) rotate(1deg); }
+    100%{ opacity:1; transform: scale(1) rotate(0); }
+  }
+  .splash-ring{
+    position:absolute; width:104px; height:104px; border-radius:26px;
+    border:1.5px solid rgba(224,16,31,.5);
+    animation: ringOut 1.6s cubic-bezier(.19,1,.22,1) infinite;
+  }
+  @keyframes ringOut{
+    0%{ transform:scale(1); opacity:.7; }
+    100%{ transform:scale(1.9); opacity:0; }
   }
 
-  @keyframes heroIn{
-    from{ opacity:0; transform: translateY(14px) scale(.985); }
-    to{ opacity:1; transform: translateY(0) scale(1); }
-  }
+  @keyframes heroIn{ from{opacity:0; transform:translateY(14px) scale(.985);} to{opacity:1; transform:translateY(0) scale(1);} }
   .hero-in{ animation: heroIn .55s cubic-bezier(.19,1,.22,1) both; }
-
-  @keyframes fadeUp{
-    from{ opacity:0; transform: translateY(8px); }
-    to{ opacity:1; transform: translateY(0); }
-  }
+  @keyframes fadeUp{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
   .fade-up{ animation: fadeUp .4s ease both; }
+  .stagger > *{ animation: fadeUp .45s ease both; }
+  .stagger > *:nth-child(1){ animation-delay:.02s }
+  .stagger > *:nth-child(2){ animation-delay:.06s }
+  .stagger > *:nth-child(3){ animation-delay:.10s }
+  .stagger > *:nth-child(4){ animation-delay:.14s }
+  .stagger > *:nth-child(5){ animation-delay:.18s }
+  .stagger > *:nth-child(6){ animation-delay:.22s }
+  .stagger > *:nth-child(7){ animation-delay:.26s }
+  .stagger > *:nth-child(8){ animation-delay:.30s }
 
-  .strike{
-    position:relative; color:var(--text-dimmer) !important;
+  .pulse-dot{ box-shadow:0 0 0 0 rgba(224,16,31,.6); animation:pulseDot 2.2s infinite; }
+  @keyframes pulseDot{
+    0%{ box-shadow:0 0 0 0 rgba(224,16,31,.55); }
+    70%{ box-shadow:0 0 0 14px rgba(224,16,31,0); }
+    100%{ box-shadow:0 0 0 0 rgba(224,16,31,0); }
   }
+
+  .strike{ position:relative; color:var(--text-dimmer)!important; }
   .strike::after{
-    content:''; position:absolute; left:0; right:0; top:50%;
-    height:1px; background:var(--text-dimmer);
-    transform:scaleX(1); transform-origin:left;
-    animation: strikeLine .35s ease forwards;
+    content:''; position:absolute; left:0; right:0; top:50%; height:1px; background:var(--text-dimmer);
+    transform-origin:left; animation:strikeLine .35s ease forwards;
   }
-  @keyframes strikeLine{ from{ transform:scaleX(0);} to{ transform:scaleX(1);} }
+  @keyframes strikeLine{ from{transform:scaleX(0);} to{transform:scaleX(1);} }
 
   .modal-backdrop{ animation: fadeUp .2s ease both; }
   .modal-sheet{ animation: sheetUp .32s cubic-bezier(.19,1,.22,1) both; }
-  @keyframes sheetUp{
-    from{ opacity:0; transform: translateY(28px); }
-    to{ opacity:1; transform: translateY(0); }
-  }
+  @keyframes sheetUp{ from{opacity:0; transform:translateY(28px);} to{opacity:1; transform:translateY(0);} }
 
-  input[type="time"]{ color-scheme: dark; }
+  input,select,textarea{ color-scheme: dark; }
+  .fld{ width:100%; border-radius:16px; padding:14px 16px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); font-size:15px; outline:none; color:var(--text); }
+  .fld:focus{ border-color:var(--accent-2); }
+  .btn-primary{ background:linear-gradient(145deg, var(--accent-2), var(--accent-deep)); box-shadow:0 8px 24px -6px rgba(224,16,31,.5); }
 
-  .confetti-piece{
-    position:fixed; top:-10px; z-index:200; pointer-events:none;
-    border-radius:1px;
-  }
+  .confetti-piece{ position:fixed; top:-10px; z-index:200; pointer-events:none; border-radius:1px; }
   @keyframes confettiFall{
-    0%{ transform: translateY(0) rotate(0deg); opacity:1; }
-    100%{ transform: translateY(110vh) rotate(540deg); opacity:0; }
+    0%{ transform:translateY(0) rotate(0); opacity:1; }
+    100%{ transform:translateY(110vh) rotate(540deg); opacity:0; }
   }
 
   .day-chip{ transition: all .25s cubic-bezier(.19,1,.22,1); }
 
-  .glow-ring{
-    background: conic-gradient(from 0deg, var(--accent), var(--gold), var(--accent));
-    filter: blur(0.5px);
-  }
+  #syncDot{ transition: background .4s ease, opacity .4s ease; }
 
   @media (prefers-reduced-motion: reduce){
-    *{ animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+    *{ animation-duration:.001ms!important; animation-iteration-count:1!important; transition-duration:.001ms!important; }
   }
 </style>
 </head>
 <body class="pb-28">
 
+<!-- AÇILIŞ -->
+<div id="splash">
+  <div class="relative flex items-center justify-center">
+    <div class="splash-ring"></div>
+    <div class="splash-card">
+      <div class="top"><span id="splashMonth">EYL</span></div>
+      <div class="num" id="splashDay">1</div>
+    </div>
+  </div>
+</div>
+
 <div id="app" class="max-w-md mx-auto min-h-dvh relative px-5 pt-[calc(1.25rem+env(safe-area-inset-top))]">
 
   <!-- ÜST BAR -->
-  <div class="flex items-center justify-between mb-6">
-    <div>
+  <div class="flex items-center justify-between mb-5">
+    <div id="headerTapZone">
       <p class="text-[13px] tracking-wide text-[var(--text-dim)]" id="topDate">—</p>
-      <h1 class="serif text-[22px] leading-tight font-semibold" id="topGreeting">Merhaba, bir tanem</h1>
+      <h1 class="serif text-[22px] leading-tight font-semibold" id="topGreeting">Merhaba</h1>
     </div>
-    <button id="bellBtn" class="press glass w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" aria-label="Bildirim ayarları">
-      <svg id="bellIcon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-    </button>
+    <div class="flex items-center gap-2">
+      <span id="syncDot" class="w-2 h-2 rounded-full opacity-0" style="background:var(--accent-2);"></span>
+      <button id="bellBtn" class="press glass w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" aria-label="Bildirimler">
+        <svg id="bellIcon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </button>
+    </div>
   </div>
 
-  <button id="streakChip" class="press glass w-full rounded-2xl px-4 py-3.5 mb-6 flex items-center justify-center gap-2.5">
+  <div class="glass w-full rounded-2xl px-4 py-3.5 mb-6 flex items-center justify-center gap-2.5">
     <span class="serif font-semibold leading-none" style="font-size:30px; color:var(--accent-2);" id="streakNumber">—</span>
     <span class="text-[12px] text-[var(--text-dimmer)]" id="streakSuffix"></span>
-  </button>
+  </div>
+
+  <!-- ŞU AN -->
   <section id="screen-live">
-    <!-- saat -->
     <div class="glass rounded-[28px] p-6 mb-5 hero-in text-center">
-      <p class="text-[12px] uppercase tracking-[0.14em] text-[var(--text-dimmer)] mb-1" style="letter-spacing:.08em;">şu an</p>
+      <p class="text-[12px] uppercase text-[var(--text-dimmer)] mb-1" style="letter-spacing:.1em;">şu an</p>
       <p class="serif font-semibold leading-none" style="font-size:52px;" id="liveClock">00:00</p>
-      <p class="text-[13px] text-[var(--text-dim)] mt-2" id="liveDayLabel">Pazartesi</p>
+      <p class="text-[13px] text-[var(--text-dim)] mt-2" id="liveDayLabel">—</p>
     </div>
 
-    <!-- şu anki görev kartı -->
+    <div id="noteWrap" class="mb-5"></div>
     <div id="currentTaskWrap" class="mb-5"></div>
-
-    <!-- sıradaki -->
     <div id="nextTaskWrap" class="mb-6"></div>
 
-    <!-- bugünün listesi -->
     <div class="flex items-center justify-between mb-3 mt-2">
       <h2 class="serif text-[17px] font-semibold">Bugünün akışı</h2>
       <span class="text-[12px] text-[var(--text-dimmer)]" id="todayCount"></span>
     </div>
-    <div id="todayList" class="flex flex-col gap-2.5"></div>
+    <div id="todayList" class="flex flex-col gap-2.5 stagger mb-20"></div>
   </section>
 
-  <!-- HAFTALIK PROGRAM EKRANI -->
-  <section id="screen-weekly" class="hidden">
-    <h2 class="serif text-[20px] font-semibold mb-4">Haftalık program</h2>
-
-    <div id="dayChips" class="flex gap-2 overflow-x-auto pb-1 mb-5" style="scrollbar-width:none;"></div>
-
-    <div class="flex items-center justify-between mb-3">
-      <p class="text-[13px] text-[var(--text-dim)]" id="weeklySelectedDay">—</p>
-      <span class="text-[12px] text-[var(--text-dimmer)]" id="weeklyCount"></span>
-    </div>
-
-    <div id="weeklyList" class="flex flex-col gap-2.5 mb-24"></div>
+  <!-- PLANLAR -->
+  <section id="screen-plans" class="hidden">
+    <h2 class="serif text-[20px] font-semibold mb-4">Haftalık plan</h2>
+    <div id="planChips" class="flex gap-2 overflow-x-auto pb-1 mb-5" style="scrollbar-width:none;"></div>
+    <div id="planList" class="flex flex-col gap-2.5 stagger mb-24"></div>
   </section>
 
-  <!-- Yeni görev ekle (yüzen buton) -->
-  <button id="addTaskBtn" class="press fixed z-40 right-5 rounded-full flex items-center justify-center shadow-2xl hidden"
-    style="width:60px;height:60px; bottom:calc(96px + env(safe-area-inset-bottom)); background:linear-gradient(145deg, var(--accent-2), var(--accent-deep)); box-shadow: 0 10px 30px -6px rgba(224,16,31,0.55);">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-  </button>
+  <!-- DERS PROGRAMI -->
+  <section id="screen-school" class="hidden">
+    <h2 class="serif text-[20px] font-semibold mb-4">Ders programı</h2>
+    <div id="schoolChips" class="flex gap-2 overflow-x-auto pb-1 mb-5" style="scrollbar-width:none;"></div>
+    <div id="schoolList" class="flex flex-col gap-2.5 stagger mb-24"></div>
+  </section>
 
 </div>
 
 <!-- ALT NAV -->
 <nav class="fixed bottom-0 left-0 right-0 z-30 px-5 pb-[calc(0.9rem+env(safe-area-inset-bottom))] pt-3">
   <div class="max-w-md mx-auto glass-strong rounded-[24px] flex items-center justify-around py-2.5 px-2">
-    <button data-tab="live" class="tab-btn press flex flex-col items-center gap-1 px-6 py-1.5 rounded-2xl" style="color:var(--accent-2);">
+    <button data-tab="live" class="tab-btn press flex flex-col items-center gap-1 px-5 py-1.5 rounded-2xl" style="color:var(--accent-2);">
       <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/></svg>
       <span class="text-[11px] font-medium">Şu an</span>
     </button>
-    <button data-tab="weekly" class="tab-btn press flex flex-col items-center gap-1 px-6 py-1.5 rounded-2xl" style="color:var(--text-dim);">
+    <button data-tab="plans" class="tab-btn press flex flex-col items-center gap-1 px-5 py-1.5 rounded-2xl" style="color:var(--text-dim);">
       <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.5h17M8 3v3M16 3v3"/></svg>
-      <span class="text-[11px] font-medium">Program</span>
+      <span class="text-[11px] font-medium">Plan</span>
+    </button>
+    <button data-tab="school" class="tab-btn press flex flex-col items-center gap-1 px-5 py-1.5 rounded-2xl" style="color:var(--text-dim);">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5-9 4.5-9-4.5Z"/><path d="M7 11v4.5c0 1 2.2 2.5 5 2.5s5-1.5 5-2.5V11"/></svg>
+      <span class="text-[11px] font-medium">Ders</span>
     </button>
   </div>
 </nav>
 
-<!-- GÖREV EKLE / DÜZENLE MODAL -->
-<div id="taskModal" class="fixed inset-0 z-50 hidden">
-  <div class="modal-backdrop absolute inset-0 bg-black/60" id="modalBackdrop"></div>
+<!-- BİLDİRİM MODAL -->
+<div id="notifModal" class="fixed inset-0 z-50 hidden">
+  <div class="modal-backdrop absolute inset-0 bg-black/60" data-close="notifModal"></div>
+  <div class="modal-sheet absolute bottom-0 left-0 right-0 glass-strong rounded-t-[32px] p-6 pb-[calc(1.75rem+env(safe-area-inset-bottom))] max-w-md mx-auto text-center">
+    <div class="w-10 h-1.5 rounded-full bg-white/15 mx-auto mb-5"></div>
+    <div class="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center btn-primary">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    </div>
+    <h3 class="serif text-[19px] font-semibold mb-2">Hatırlatmalar</h3>
+    <p class="text-[13.5px] text-[var(--text-dim)] mb-6 leading-relaxed" id="notifDesc">Görev saati geldiğinde uygulama açıkken haber verelim mi?</p>
+    <button id="notifEnableBtn" class="press w-full rounded-2xl py-4 font-semibold text-[15px] mb-3 btn-primary">İzin ver</button>
+    <button class="press w-full rounded-2xl py-4 font-semibold text-[15px] bg-white/5 border border-white/10" data-close="notifModal">Kapat</button>
+  </div>
+</div>
+
+<!-- ADMİN ŞİFRE -->
+<div id="pinModal" class="fixed inset-0 z-[60] hidden">
+  <div class="modal-backdrop absolute inset-0 bg-black/70" data-close="pinModal"></div>
   <div class="modal-sheet absolute bottom-0 left-0 right-0 glass-strong rounded-t-[32px] p-6 pb-[calc(1.75rem+env(safe-area-inset-bottom))] max-w-md mx-auto">
     <div class="w-10 h-1.5 rounded-full bg-white/15 mx-auto mb-5"></div>
-    <h3 class="serif text-[19px] font-semibold mb-5" id="modalTitle">Yeni görev</h3>
+    <h3 class="serif text-[19px] font-semibold mb-4 text-center">Şifre</h3>
+    <input id="pinInput" type="password" inputmode="numeric" class="fld mb-4 text-center tracking-[6px]" placeholder="••••">
+    <button id="pinSubmit" class="press w-full rounded-2xl py-4 font-semibold text-[15px] btn-primary">Gir</button>
+  </div>
+</div>
+
+<!-- ADMİN PANELİ -->
+<div id="adminPanel" class="fixed inset-0 z-[70] hidden overflow-y-auto" style="background:var(--bg);">
+  <div class="max-w-md mx-auto px-5 pt-[calc(1.25rem+env(safe-area-inset-top))] pb-[calc(2rem+env(safe-area-inset-bottom))]">
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="serif text-[22px] font-semibold">Yönetim</h2>
+      <button id="adminClose" class="press glass w-11 h-11 rounded-2xl flex items-center justify-center">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <!-- admin sekmeleri -->
+    <div class="flex gap-2 mb-6">
+      <button data-atab="plans" class="atab press flex-1 rounded-2xl py-3 text-[13.5px] font-medium btn-primary">Plan</button>
+      <button data-atab="school" class="atab press flex-1 rounded-2xl py-3 text-[13.5px] font-medium glass">Ders</button>
+      <button data-atab="extra" class="atab press flex-1 rounded-2xl py-3 text-[13.5px] font-medium glass">Diğer</button>
+    </div>
+
+    <!-- PLAN YÖNETİMİ -->
+    <div id="atab-plans">
+      <div id="adminPlanChips" class="flex gap-2 overflow-x-auto pb-1 mb-4" style="scrollbar-width:none;"></div>
+      <button id="adminAddPlan" class="press w-full rounded-2xl py-3.5 mb-4 text-[14px] font-semibold btn-primary">+ Plan ekle</button>
+      <div id="adminPlanList" class="flex flex-col gap-2.5 mb-6"></div>
+
+      <div class="glass rounded-2xl p-4 mb-8">
+        <p class="text-[13px] font-semibold mb-1.5">Toplu ekle</p>
+        <p class="text-[11.5px] text-[var(--text-dimmer)] mb-3 leading-relaxed">Her satır: <b>Gün | 09:00-10:30 | Başlık</b><br>Örn: Pazartesi | 14:00-15:30 | Arda ile buluş</p>
+        <textarea id="bulkPlan" rows="5" class="fld mb-3 text-[13px]" placeholder="Pazartesi | 14:00-15:30 | Arda ile buluş"></textarea>
+        <button id="bulkPlanBtn" class="press w-full rounded-2xl py-3 text-[13.5px] font-semibold bg-white/5 border border-white/10">Hepsini ekle</button>
+      </div>
+    </div>
+
+    <!-- DERS YÖNETİMİ -->
+    <div id="atab-school" class="hidden">
+      <div id="adminSchoolChips" class="flex gap-2 overflow-x-auto pb-1 mb-4" style="scrollbar-width:none;"></div>
+      <button id="adminAddSchool" class="press w-full rounded-2xl py-3.5 mb-4 text-[14px] font-semibold btn-primary">+ Ders ekle</button>
+      <div id="adminSchoolList" class="flex flex-col gap-2.5 mb-6"></div>
+
+      <div class="glass rounded-2xl p-4 mb-8">
+        <p class="text-[13px] font-semibold mb-1.5">Ders programını toplu yapıştır</p>
+        <p class="text-[11.5px] text-[var(--text-dimmer)] mb-3 leading-relaxed">Her satır: <b>Gün | 09:00-10:30 | Ders adı</b></p>
+        <textarea id="bulkSchool" rows="6" class="fld mb-3 text-[13px]" placeholder="Pazartesi | 09:00-10:30 | Matematik"></textarea>
+        <button id="bulkSchoolBtn" class="press w-full rounded-2xl py-3 text-[13.5px] font-semibold bg-white/5 border border-white/10">Hepsini ekle</button>
+        <button id="clearSchoolBtn" class="press w-full rounded-2xl py-3 mt-2 text-[13.5px] font-semibold bg-white/5 border border-white/10" style="color:#ff8189;">Tüm ders programını sil</button>
+      </div>
+    </div>
+
+    <!-- DİĞER -->
+    <div id="atab-extra" class="hidden">
+      <div class="glass rounded-2xl p-4 mb-4">
+        <p class="text-[13px] font-semibold mb-2">Bugünün notu</p>
+        <p class="text-[11.5px] text-[var(--text-dimmer)] mb-3">Ekranının en üstünde çıkar. Boş bırakırsan görünmez.</p>
+        <textarea id="noteInput" rows="3" class="fld mb-3 text-[14px]" placeholder="Bugün seni çok özledim..."></textarea>
+        <button id="noteSaveBtn" class="press w-full rounded-2xl py-3 text-[13.5px] font-semibold btn-primary">Notu yayınla</button>
+      </div>
+
+      <div class="glass rounded-2xl p-4 mb-4">
+        <p class="text-[13px] font-semibold mb-2">Gün sayacı</p>
+        <p class="text-[11.5px] text-[var(--text-dimmer)] mb-3">Başlangıç tarihi. Üstteki büyük rakam buna göre her gün artar.</p>
+        <input id="startDateInput" type="date" class="fld mb-3">
+        <button id="startDateSaveBtn" class="press w-full rounded-2xl py-3 text-[13.5px] font-semibold btn-primary">Kaydet</button>
+      </div>
+
+      <div class="glass rounded-2xl p-4 mb-8">
+        <p class="text-[13px] font-semibold mb-2">Her gün tekrarlayanlar</p>
+        <p class="text-[11.5px] text-[var(--text-dimmer)] mb-3">Haftanın her günü otomatik listeye düşer.</p>
+        <div id="recurringList" class="flex flex-col gap-2 mb-3"></div>
+        <div class="flex gap-2 mb-2">
+          <input id="recTime" type="time" class="fld" style="width:120px;">
+          <input id="recTitle" type="text" class="fld flex-1" placeholder="İlacını unutma">
+        </div>
+        <button id="recAddBtn" class="press w-full rounded-2xl py-3 text-[13.5px] font-semibold btn-primary">Ekle</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADMİN GÖREV DÜZENLEME -->
+<div id="editModal" class="fixed inset-0 z-[80] hidden">
+  <div class="modal-backdrop absolute inset-0 bg-black/70" data-close="editModal"></div>
+  <div class="modal-sheet absolute bottom-0 left-0 right-0 glass-strong rounded-t-[32px] p-6 pb-[calc(1.75rem+env(safe-area-inset-bottom))] max-w-md mx-auto max-h-[92dvh] overflow-y-auto">
+    <div class="w-10 h-1.5 rounded-full bg-white/15 mx-auto mb-5"></div>
+    <h3 class="serif text-[19px] font-semibold mb-5" id="editTitle">Ekle</h3>
 
     <label class="text-[12px] text-[var(--text-dim)] mb-1.5 block">Gün</label>
-    <select id="taskDayInput" class="w-full mb-4 rounded-2xl px-4 py-3.5 bg-white/5 border border-white/10 text-[15px] outline-none focus:border-[var(--accent-2)]"></select>
+    <select id="editDay" class="fld mb-4"></select>
 
-    <label class="text-[12px] text-[var(--text-dim)] mb-1.5 block">Ne yapılacak?</label>
-    <input id="taskTitleInput" type="text" maxlength="60" placeholder="Örn. Birlikte film izleme zamanı"
-      class="w-full mb-4 rounded-2xl px-4 py-3.5 bg-white/5 border border-white/10 text-[15px] outline-none placeholder:text-[var(--text-dimmer)] focus:border-[var(--accent-2)]">
+    <label class="text-[12px] text-[var(--text-dim)] mb-1.5 block" id="editTitleLabel">Başlık</label>
+    <input id="editName" type="text" maxlength="70" class="fld mb-4" placeholder="Örn. Arda ile buluş">
 
     <div class="flex gap-3 mb-4">
       <div class="flex-1">
         <label class="text-[12px] text-[var(--text-dim)] mb-1.5 block">Başlangıç</label>
-        <input id="taskStartInput" type="time" class="w-full rounded-2xl px-4 py-3.5 bg-white/5 border border-white/10 text-[15px] outline-none focus:border-[var(--accent-2)]">
+        <input id="editStart" type="time" class="fld">
       </div>
       <div class="flex-1">
         <label class="text-[12px] text-[var(--text-dim)] mb-1.5 block">Bitiş</label>
-        <input id="taskEndInput" type="time" class="w-full rounded-2xl px-4 py-3.5 bg-white/5 border border-white/10 text-[15px] outline-none focus:border-[var(--accent-2)]">
+        <input id="editEnd" type="time" class="fld">
       </div>
     </div>
 
-    <label class="text-[12px] text-[var(--text-dim)] mb-1.5 block">Fotoğraf <span class="text-[var(--text-dimmer)]">(opsiyonel)</span></label>
-    <input id="taskImageInput" type="file" accept="image/*" class="hidden">
-    <div id="taskImageEmpty" class="press mb-5 rounded-2xl border border-dashed border-white/15 py-5 flex flex-col items-center justify-center gap-1.5 text-[var(--text-dimmer)]">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
-      <span class="text-[12.5px]">Fotoğraf eklemek için dokun</span>
-    </div>
-    <div id="taskImagePreviewWrap" class="mb-5 hidden relative">
-      <img id="taskImagePreview" class="w-full h-40 object-cover rounded-2xl border border-white/10" src="">
-      <button id="taskImageRemoveBtn" type="button" class="press absolute top-2 right-2 w-8 h-8 rounded-full bg-black/60 border border-white/15 flex items-center justify-center">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-      </button>
+    <div id="imageSection">
+      <label class="text-[12px] text-[var(--text-dim)] mb-1.5 block">Fotoğraf <span class="text-[var(--text-dimmer)]">(opsiyonel)</span></label>
+      <input id="editImageInput" type="file" accept="image/*" class="hidden">
+      <div id="imgEmpty" class="press mb-5 rounded-2xl border border-dashed border-white/15 py-5 flex flex-col items-center justify-center gap-1.5 text-[var(--text-dimmer)]">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+        <span class="text-[12.5px]">Fotoğraf eklemek için dokun</span>
+      </div>
+      <div id="imgPrev" class="mb-5 hidden relative">
+        <img id="imgPrevEl" class="w-full h-40 object-cover rounded-2xl border border-white/10" src="" alt="">
+        <button id="imgRemove" type="button" class="press absolute top-2 right-2 w-8 h-8 rounded-full bg-black/60 border border-white/15 flex items-center justify-center">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
     </div>
 
-    <p id="modalError" class="text-[12.5px] mb-3 hidden" style="color:var(--accent-2);"></p>
+    <p id="editError" class="text-[12.5px] mb-3 hidden" style="color:var(--accent-2);"></p>
 
     <div class="flex gap-3">
-      <button id="deleteTaskBtn" class="press hidden shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center bg-white/5 border border-white/10">
+      <button id="editDelete" class="press hidden shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center bg-white/5 border border-white/10">
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#ff8189" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m-1 0v13a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2V7h8Z"/></svg>
       </button>
-      <button id="saveTaskBtn" class="press flex-1 rounded-2xl py-4 font-semibold text-[15px]" style="background:linear-gradient(145deg, var(--accent-2), var(--accent-deep)); box-shadow: 0 8px 24px -6px rgba(224,16,31,0.5);">Kaydet</button>
+      <button id="editSave" class="press flex-1 rounded-2xl py-4 font-semibold text-[15px] btn-primary">Kaydet</button>
     </div>
-  </div>
-</div>
-
-<!-- BİRLİKTE GEÇEN GÜN MODAL -->
-<div id="streakModal" class="fixed inset-0 z-50 hidden">
-  <div class="modal-backdrop absolute inset-0 bg-black/60" id="streakBackdrop"></div>
-  <div class="modal-sheet absolute bottom-0 left-0 right-0 glass-strong rounded-t-[32px] p-6 pb-[calc(1.75rem+env(safe-area-inset-bottom))] max-w-md mx-auto text-center">
-    <div class="w-10 h-1.5 rounded-full bg-white/15 mx-auto mb-5"></div>
-    <div class="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center" style="background:linear-gradient(145deg, var(--accent-2), var(--accent-deep));">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="1.5" stroke-linejoin="round"><path d="M12.1 21.35C9.3 19 3 14.28 3 9.5A5.5 5.5 0 0 1 12 5.5a5.5 5.5 0 0 1 9 4c0 4.78-6.3 9.5-9.1 11.85l-.9.65z"/></svg>
-    </div>
-    <h3 class="serif text-[19px] font-semibold mb-2">Birlikte olduğumuz gün</h3>
-    <p class="text-[13.5px] text-[var(--text-dim)] mb-5 leading-relaxed">İlk günü seç, sayaç her gün otomatik artsın.</p>
-    <input id="streakDateInput" type="date" class="w-full mb-5 rounded-2xl px-4 py-3.5 bg-white/5 border border-white/10 text-[15px] outline-none focus:border-[var(--accent-2)] text-center">
-    <div class="flex gap-3">
-      <button id="streakClearBtn" class="press hidden shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center bg-white/5 border border-white/10">
-        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#ff8189" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m-1 0v13a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2V7h8Z"/></svg>
-      </button>
-      <button id="streakSaveBtn" class="press flex-1 rounded-2xl py-4 font-semibold text-[15px]" style="background:linear-gradient(145deg, var(--accent-2), var(--accent-deep)); box-shadow: 0 8px 24px -6px rgba(224,16,31,0.5);">Kaydet</button>
-    </div>
-  </div>
-</div>
-
-<!-- BİLDİRİM AYAR MODAL -->
-<div id="notifModal" class="fixed inset-0 z-50 hidden">
-  <div class="modal-backdrop absolute inset-0 bg-black/60" id="notifBackdrop"></div>
-  <div class="modal-sheet absolute bottom-0 left-0 right-0 glass-strong rounded-t-[32px] p-6 pb-[calc(1.75rem+env(safe-area-inset-bottom))] max-w-md mx-auto text-center">
-    <div class="w-10 h-1.5 rounded-full bg-white/15 mx-auto mb-5"></div>
-    <div class="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center" style="background:linear-gradient(145deg, var(--accent-2), var(--accent-deep));">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-    </div>
-    <h3 class="serif text-[19px] font-semibold mb-2">Hatırlatmalar</h3>
-    <p class="text-[13.5px] text-[var(--text-dim)] mb-6 leading-relaxed" id="notifDesc">Görev saati geldiğinde bu sayfa açıkken sana haber verelim mi? İzin ver, seni hiçbir şey kaçırmasın.</p>
-    <button id="notifEnableBtn" class="press w-full rounded-2xl py-4 font-semibold text-[15px] mb-3" style="background:linear-gradient(145deg, var(--accent-2), var(--accent-deep));">İzin ver</button>
-    <button id="notifCloseBtn" class="press w-full rounded-2xl py-4 font-semibold text-[15px] bg-white/5 border border-white/10">Kapat</button>
   </div>
 </div>
 
 <script>
 (function(){
 
-  /* ============ AYARLANABİLİR BAŞLIK ============ */
-  var APP_NAME = "Takvim";
-  document.title = APP_NAME;
+/* =================== AYARLAR =================== */
+var APP_NAME = "Takvim";
+var ADMIN_PIN = "1907";          // ← admin şifresi, istediğin gibi değiştir
+var DB_ROOT  = "takvim";
 
-  /* ============ İKON / MANIFEST (tek dosya PWA, sıradan takvim görünümü) ============ */
-  var _iconNow = new Date();
-  var _iconDayNum = _iconNow.getDate();
-  var _iconMonthAbbr = ['OCA','ŞUB','MAR','NİS','MAY','HAZ','TEM','AĞU','EYL','EKİ','KAS','ARA'][_iconNow.getMonth()];
-  var iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">'
-    + '<rect width="192" height="192" rx="42" fill="#0a0a0c"/>'
-    + '<circle cx="96" cy="96" r="70" fill="none" stroke="#e0101f" stroke-width="3"/>'
-    + '</svg>';
-  var iconUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(iconSvg)));
-  document.getElementById('appleTouchIcon').setAttribute('href', iconUrl);
-  document.getElementById('faviconIcon').setAttribute('href', iconUrl);
+var firebaseConfig = {
+  apiKey: "AIzaSyAcXu1npv1_BVbHTx9u2RAgWfM8xbwFeog",
+  authDomain: "takvim-848d2.firebaseapp.com",
+  databaseURL: "https://takvim-848d2-default-rtdb.firebaseio.com",
+  projectId: "takvim-848d2",
+  storageBucket: "takvim-848d2.firebasestorage.app",
+  messagingSenderId: "408113833741",
+  appId: "1:408113833741:web:b59daabdec115d62ff3244"
+};
 
-  var manifest = {
-    name: APP_NAME,
-    short_name: APP_NAME,
-    start_url: ".",
-    display: "standalone",
-    background_color: "#08080a",
-    theme_color: "#08080a",
-    icons: [{ src: iconUrl, sizes: "192x192", type: "image/svg+xml" }, { src: iconUrl, sizes: "512x512", type: "image/svg+xml" }]
-  };
-  var manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
-  document.getElementById('manifestLink').setAttribute('href', URL.createObjectURL(manifestBlob));
+/* =================== SABİTLER =================== */
+var DAYS = ['Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi','Pazar'];
+var JS2TR = {1:'Pazartesi',2:'Salı',3:'Çarşamba',4:'Perşembe',5:'Cuma',6:'Cumartesi',0:'Pazar'};
+var MONTHS = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+var MONTHS_ABBR = ['OCA','ŞUB','MAR','NİS','MAY','HAZ','TEM','AĞU','EYL','EKİ','KAS','ARA'];
+var GREETINGS = ["Merhaba, bir tanem","Günün nasıl geçiyor","Seni düşünüyorum","Bugün de güzelsin","Bir bakayım dedim","Aklımdaydın"];
+var IDLE = [
+  "Şu an için planlı bir şey yok. Biraz kendine vakit ayır, bana da.",
+  "Boş bir an bu. Derin bir nefes al, birazdan devam ederiz.",
+  "Takvimde bir boşluk var. Belki bir kahve molası tam sırası.",
+  "Şu anlık serbestsin."
+];
 
-  /* ============ VERİ / LOCALSTORAGE ============ */
-  var STORAGE_KEY = 'kalbinin-takvimi-v1';
-  var NOTIF_KEY = 'kalbinin-takvimi-notif-fired';
-  var DAYS = ['Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi','Pazar'];
-  var JS_DAY_TO_TR = {1:'Pazartesi',2:'Salı',3:'Çarşamba',4:'Perşembe',5:'Cuma',6:'Cumartesi',0:'Pazar'};
+/* =================== İKON / MANIFEST =================== */
+var _n = new Date();
+var iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">'
+  + '<rect width="192" height="192" rx="40" fill="#ffffff"/>'
+  + '<path d="M0 40 A40 40 0 0 1 40 0 H152 A40 40 0 0 1 192 40 V56 H0 Z" fill="#e0101f"/>'
+  + '<text x="96" y="41" font-family="Helvetica,Arial,sans-serif" font-size="21" font-weight="700" fill="#ffffff" text-anchor="middle">'+MONTHS_ABBR[_n.getMonth()]+'</text>'
+  + '<text x="96" y="148" font-family="Helvetica,Arial,sans-serif" font-size="100" font-weight="600" fill="#111111" text-anchor="middle">'+_n.getDate()+'</text>'
+  + '</svg>';
+var iconUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(iconSvg)));
+document.getElementById('appleTouchIcon').setAttribute('href', iconUrl);
+document.getElementById('faviconIcon').setAttribute('href', iconUrl);
+var manifest = { name:APP_NAME, short_name:APP_NAME, start_url:".", display:"standalone",
+  background_color:"#08080a", theme_color:"#08080a",
+  icons:[{src:iconUrl,sizes:"192x192",type:"image/svg+xml"},{src:iconUrl,sizes:"512x512",type:"image/svg+xml"}] };
+document.getElementById('manifestLink').setAttribute('href', URL.createObjectURL(new Blob([JSON.stringify(manifest)],{type:'application/json'})));
 
-  function defaultData(){
-    var d = {};
-    DAYS.forEach(function(day){ d[day] = []; });
-    return { tasks: d, notifEnabled: false, startDate: null };
-  }
+document.getElementById('splashMonth').textContent = MONTHS_ABBR[_n.getMonth()];
+document.getElementById('splashDay').textContent = _n.getDate();
 
-  function loadData(){
-    try{
-      var raw = localStorage.getItem(STORAGE_KEY);
-      if(!raw) return defaultData();
-      var parsed = JSON.parse(raw);
-      DAYS.forEach(function(day){ if(!parsed.tasks[day]) parsed.tasks[day] = []; });
-      return parsed;
-    }catch(e){ return defaultData(); }
-  }
+/* =================== FIREBASE =================== */
+firebase.initializeApp(firebaseConfig);
+var db = firebase.database();
+var rootRef = db.ref(DB_ROOT);
 
-  function saveData(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data)); }
+var cloud = { plans:{}, school:{}, note:'', startDate:null, recurring:[] };
+var done = {};           // { taskId: true } — bugün için
+var localState = { tab:'live', planDay: JS2TR[new Date().getDay()], schoolDay: JS2TR[new Date().getDay()] };
+var loaded = false;
 
-  var state = {
-    data: loadData(),
-    activeTab: 'live',
-    selectedDay: JS_DAY_TO_TR[new Date().getDay()],
-    editingTaskId: null
-  };
+function todayKey(){
+  var d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
 
-  /* ============ YARDIMCILAR ============ */
-  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
-
-  function toMinutes(hhmm){
-    var p = hhmm.split(':'); return parseInt(p[0],10)*60 + parseInt(p[1],10);
-  }
-
-  function fmtRange(start,end){ return start + ' – ' + end; }
-
-  function sortDay(day){
-    state.data.tasks[day].sort(function(a,b){ return toMinutes(a.start) - toMinutes(b.start); });
-  }
-
-  var MONTHS_TR = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
-
-  var GREETINGS = [
-    "Merhaba, bir tanem", "Günün nasıl geçiyor", "Seni düşünüyorum",
-    "Bugün de güzelsin", "Bir bakayım dedim", "Aklımdaydın"
-  ];
-
-  var IDLE_LINES = [
-    "Şu an için planlı bir şey yok. Biraz kendine vakit ayır, bana da.",
-    "Boş bir an bu. Derin bir nefes al, birazdan devam ederiz.",
-    "Takvimde bir boşluk var. Belki bir kahve molası tam sırası.",
-    "Şu anlık serbestsin. İstersen haftalık programa yeni bir şey ekle."
-  ];
-
-  /* ============ RENDER: ÜST BAR ============ */
-  function renderTopBar(){
-    var now = new Date();
-    document.getElementById('topDate').textContent = now.getDate() + ' ' + MONTHS_TR[now.getMonth()] + ', ' + JS_DAY_TO_TR[now.getDay()];
-    var greetIdx = now.getHours() % GREETINGS.length;
-    document.getElementById('topGreeting').textContent = GREETINGS[greetIdx];
-  }
-
-  /* ============ RENDER: CANLI EKRAN ============ */
-  function currentTaskCardHTML(task, minutesLeft){
-    var imageBlock = task.image
-      ? '<img src="'+task.image+'" class="w-full h-40 object-cover rounded-2xl mb-4 relative border border-white/10">'
-      : '';
-    return (
-      '<div class="glass-strong rounded-[28px] p-6 relative overflow-hidden hero-in">'
-        +'<div class="absolute -top-10 -right-10 w-40 h-40 rounded-full" style="background:radial-gradient(circle, rgba(224,16,31,0.28), transparent 70%);"></div>'
-        +imageBlock
-        +'<div class="flex items-center gap-2 mb-3 relative">'
-          +'<span class="w-2 h-2 rounded-full pulse-dot" style="background:var(--accent-2);"></span>'
-          +'<span class="text-[12.5px] font-medium tracking-wide" style="color:var(--accent-2);">şu an bunu yapıyor olman lazım, bir tanem</span>'
-        +'</div>'
-        +'<h3 class="serif font-semibold leading-snug mb-3 relative" style="font-size:25px;">'+escapeHtml(task.title)+'</h3>'
-        +'<div class="flex items-center justify-between relative">'
-          +'<span class="text-[13.5px] text-[var(--text-dim)]">'+fmtRange(task.start,task.end)+' · '+minutesLeft+' dk kaldı</span>'
-        +'</div>'
-        +'<div class="flex gap-2.5 mt-5 relative">'
-          +'<button data-done="'+task.id+'" data-day="'+state.selectedLiveDay+'" class="press flex-1 rounded-2xl py-3 text-[14px] font-semibold flex items-center justify-center gap-1.5" style="background:linear-gradient(145deg, var(--accent-2), var(--accent-deep));">Yapıldı <span>✅</span></button>'
-          +'<button data-undone="'+task.id+'" data-day="'+state.selectedLiveDay+'" class="press flex-1 rounded-2xl py-3 text-[14px] font-semibold flex items-center justify-center gap-1.5 bg-white/5 border border-white/10">Yapılmadı <span>❌</span></button>'
-        +'</div>'
-      +'</div>'
-    );
-  }
-
-  function renderLive(){
-    var now = new Date();
-    var hh = String(now.getHours()).padStart(2,'0');
-    var mm = String(now.getMinutes()).padStart(2,'0');
-    document.getElementById('liveClock').textContent = hh + ':' + mm;
-    var todayName = JS_DAY_TO_TR[now.getDay()];
-    document.getElementById('liveDayLabel').textContent = todayName;
-    state.selectedLiveDay = todayName;
-
-    var nowMin = now.getHours()*60 + now.getMinutes();
-    var tasks = state.data.tasks[todayName].slice();
-    sortDay(todayName);
-
-    var current = null, next = null;
-    tasks.forEach(function(t){
-      var s = toMinutes(t.start), e = toMinutes(t.end);
-      if(nowMin >= s && nowMin < e && !current) current = t;
-      if(s > nowMin && (!next || s < toMinutes(next.start))) next = t;
-    });
-
-    var curWrap = document.getElementById('currentTaskWrap');
-    if(current){
-      curWrap.innerHTML = currentTaskCardHTML(current, toMinutes(current.end) - nowMin);
-    } else {
-      var line = IDLE_LINES[now.getMinutes() % IDLE_LINES.length];
-      curWrap.innerHTML = (
-        '<div class="glass rounded-[28px] p-6 text-center hero-in">'
-          +'<p class="text-[28px] mb-2">☾</p>'
-          +'<p class="text-[14.5px] text-[var(--text-dim)] leading-relaxed">'+line+'</p>'
-        +'</div>'
-      );
-    }
-
-    var nextWrap = document.getElementById('nextTaskWrap');
-    if(next){
-      nextWrap.innerHTML = (
-        '<div class="glass rounded-2xl px-4 py-3.5 flex items-center justify-between fade-up">'
-          +'<div><p class="text-[11.5px] text-[var(--text-dimmer)] mb-0.5">sırada</p><p class="text-[14px] font-medium">'+escapeHtml(next.title)+'</p></div>'
-          +'<span class="text-[13px] text-[var(--text-dim)]">'+next.start+'</span>'
-        +'</div>'
-      );
-    } else { nextWrap.innerHTML = ''; }
-
-    renderTodayList(todayName, tasks);
-    attachDoneHandlers();
-  }
-
-  function taskRowHTML(task, day, forWeekly){
-    var doneClass = task.done ? 'strike' : '';
-    var check = task.done
-      ? '<button data-undone="'+task.id+'" data-day="'+day+'" class="press w-9 h-9 rounded-full flex items-center justify-center shrink-0" style="background:linear-gradient(145deg, var(--accent-2), var(--accent-deep));"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></button>'
-      : '<button data-done="'+task.id+'" data-day="'+day+'" class="press w-9 h-9 rounded-full flex items-center justify-center shrink-0 border border-white/15"></button>';
-    var editAttr = forWeekly ? ' data-edit="'+task.id+'" data-editday="'+day+'"' : '';
-    var thumb = task.image
-      ? '<img src="'+task.image+'" class="w-10 h-10 rounded-xl object-cover shrink-0 border border-white/10">'
-      : '';
-    return (
-      '<div class="glass rounded-2xl px-4 py-3.5 flex items-center gap-3 fade-up"'+editAttr+'>'
-        +check
-        +thumb
-        +'<div class="flex-1 min-w-0">'
-          +'<p class="text-[14.5px] font-medium truncate '+doneClass+'">'+escapeHtml(task.title)+'</p>'
-          +'<p class="text-[12px] text-[var(--text-dimmer)] mt-0.5">'+fmtRange(task.start,task.end)+'</p>'
-        +'</div>'
-      +'</div>'
-    );
-  }
-
-  function renderTodayList(day, tasks){
-    var list = document.getElementById('todayList');
-    document.getElementById('todayCount').textContent = tasks.length ? tasks.length + ' görev' : '';
-    if(!tasks.length){
-      list.innerHTML = '<div class="glass rounded-2xl px-4 py-6 text-center"><p class="text-[13.5px] text-[var(--text-dimmer)]">Bugün için henüz bir plan yok. Program sekmesinden ekleyebilirsin.</p></div>';
-      return;
-    }
-    list.innerHTML = tasks.map(function(t){ return taskRowHTML(t, day, false); }).join('');
-  }
-
-  /* ============ RENDER: HAFTALIK PROGRAM ============ */
-  function renderDayChips(){
-    var wrap = document.getElementById('dayChips');
-    wrap.innerHTML = DAYS.map(function(day){
-      var active = day === state.selectedDay;
-      return '<button data-day-chip="'+day+'" class="day-chip press shrink-0 rounded-2xl px-4 py-2.5 text-[13.5px] font-medium '+(active ? '' : 'glass')+'" '
-        + (active ? 'style="background:linear-gradient(145deg, var(--accent-2), var(--accent-deep)); box-shadow:0 6px 18px -6px rgba(224,16,31,0.5);"' : '')
-        + '>'+day+'</button>';
-    }).join('');
-  }
-
-  function renderWeeklyList(){
-    document.getElementById('weeklySelectedDay').textContent = state.selectedDay;
-    var tasks = state.data.tasks[state.selectedDay].slice();
-    sortDay(state.selectedDay);
-    tasks = state.data.tasks[state.selectedDay];
-    document.getElementById('weeklyCount').textContent = tasks.length ? tasks.length + ' görev' : '';
-    var list = document.getElementById('weeklyList');
-    if(!tasks.length){
-      list.innerHTML = '<div class="glass rounded-2xl px-4 py-8 text-center"><p class="text-[13.5px] text-[var(--text-dimmer)] mb-1">'+state.selectedDay+' için henüz planın yok.</p><p class="text-[12.5px] text-[var(--text-dimmer)]">Sağ alttaki + ile yeni bir şey ekle (Arda ile buluş gibi).</p></div>';
-      return;
-    }
-    list.innerHTML = tasks.map(function(t){ return taskRowHTML(t, state.selectedDay, true); }).join('');
-  }
-
-  function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g, function(c){
-      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
-    });
-  }
-
-  /* ============ DONE / UNDONE + KONFETİ ============ */
-  function attachDoneHandlers(){
-    document.querySelectorAll('[data-done]').forEach(function(btn){
-      btn.onclick = function(){
-        var id = btn.getAttribute('data-done'), day = btn.getAttribute('data-day');
-        var t = state.data.tasks[day].find(function(x){ return x.id === id; });
-        if(t){ t.done = true; saveData(); fireConfetti(); refreshCurrentScreen(); }
-      };
-    });
-    document.querySelectorAll('[data-undone]').forEach(function(btn){
-      btn.onclick = function(){
-        var id = btn.getAttribute('data-undone'), day = btn.getAttribute('data-day');
-        var t = state.data.tasks[day].find(function(x){ return x.id === id; });
-        if(t){ t.done = false; saveData(); refreshCurrentScreen(); }
-      };
-    });
-  }
-
-  function fireConfetti(){
-    var colors = ['#e0101f','#ff4650','#f4f3f0','#c9a24b'];
-    var count = 46;
-    for(var i=0;i<count;i++){
-      (function(){
-        var el = document.createElement('div');
-        var size = 5 + Math.random()*6;
-        el.className = 'confetti-piece';
-        el.style.left = Math.random()*100 + 'vw';
-        el.style.width = size+'px';
-        el.style.height = (size*0.4 + 3)+'px';
-        el.style.background = colors[Math.floor(Math.random()*colors.length)];
-        el.style.opacity = '0.95';
-        var duration = 1.6 + Math.random()*1.1;
-        el.style.animation = 'confettiFall '+duration+'s cubic-bezier(.37,0,.63,1) forwards';
-        el.style.animationDelay = (Math.random()*0.25)+'s';
-        document.body.appendChild(el);
-        setTimeout(function(){ el.remove(); }, (duration+0.4)*1000);
-      })();
-    }
-  }
-
-  /* ============ BİRLİKTE OLUNAN GÜN SAYACI ============ */
-  function renderStreak(){
-    var numEl = document.getElementById('streakNumber');
-    var suffixEl = document.getElementById('streakSuffix');
-    if(!state.data.startDate){
-      numEl.textContent = '＋';
-      suffixEl.textContent = 'başlangıç günü seç';
-      return;
-    }
-    var start = new Date(state.data.startDate + 'T00:00:00');
-    var now = new Date();
-    var startMid = new Date(start.getFullYear(), start.getMonth(), start.getDate());
-    var nowMid = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    var days = Math.floor((nowMid - startMid) / 86400000) + 1;
-    if(days < 1) days = 1;
-    numEl.textContent = days;
-    suffixEl.textContent = 'gün';
-  }
-
-  var streakModal = document.getElementById('streakModal');
-  document.getElementById('streakChip').addEventListener('click', function(){
-    document.getElementById('streakDateInput').value = state.data.startDate || '';
-    document.getElementById('streakClearBtn').classList.toggle('hidden', !state.data.startDate);
-    streakModal.classList.remove('hidden');
+function normalizeDayMap(obj){
+  var out = {};
+  DAYS.forEach(function(d){
+    var arr = (obj && obj[d]) ? obj[d] : [];
+    if(!Array.isArray(arr)) arr = Object.keys(arr).map(function(k){ return arr[k]; });
+    out[d] = arr.filter(Boolean);
   });
-  document.getElementById('streakBackdrop').addEventListener('click', function(){ streakModal.classList.add('hidden'); });
-  document.getElementById('streakSaveBtn').addEventListener('click', function(){
-    var val = document.getElementById('streakDateInput').value;
-    if(!val) return;
-    state.data.startDate = val;
-    saveData();
-    renderStreak();
-    streakModal.classList.add('hidden');
+  return out;
+}
+
+function flashSync(){
+  var dot = document.getElementById('syncDot');
+  dot.style.opacity = '1';
+  setTimeout(function(){ dot.style.opacity = '0'; }, 900);
+}
+
+rootRef.on('value', function(snap){
+  var v = snap.val() || {};
+  cloud.plans = normalizeDayMap(v.plans);
+  cloud.school = normalizeDayMap(v.school);
+  cloud.note = v.note || '';
+  cloud.startDate = v.startDate || null;
+  var rec = v.recurring || [];
+  if(!Array.isArray(rec)) rec = Object.keys(rec).map(function(k){ return rec[k]; });
+  cloud.recurring = rec.filter(Boolean);
+  loaded = true;
+  flashSync();
+  renderAll();
+  if(adminOpen) renderAdmin();
+});
+
+db.ref(DB_ROOT+'/done/'+todayKey()).on('value', function(snap){
+  done = snap.val() || {};
+  renderAll();
+});
+
+function saveCloud(patch){ rootRef.update(patch); }
+function setDone(id, val){
+  var ref = db.ref(DB_ROOT+'/done/'+todayKey()+'/'+id);
+  if(val) ref.set(true); else ref.remove();
+}
+
+/* =================== YARDIMCI =================== */
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function toMin(t){ var p=t.split(':'); return (+p[0])*60 + (+p[1]); }
+function addMin(t,m){ var x=toMin(t)+m; if(x>1439)x=1439; return String(Math.floor(x/60)).padStart(2,'0')+':'+String(x%60).padStart(2,'0'); }
+function esc(s){ return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+function bySort(a,b){ return toMin(a.start)-toMin(b.start); }
+
+function todaysItems(){
+  var day = JS2TR[new Date().getDay()];
+  var list = [];
+  (cloud.plans[day]||[]).forEach(function(t){ list.push(Object.assign({},t,{kind:'plan'})); });
+  (cloud.school[day]||[]).forEach(function(t){ list.push(Object.assign({},t,{kind:'school'})); });
+  cloud.recurring.forEach(function(r){
+    list.push({ id:r.id, title:r.title, start:r.time, end:addMin(r.time,120), kind:'rec' });
   });
-  document.getElementById('streakClearBtn').addEventListener('click', function(){
-    state.data.startDate = null;
-    saveData();
-    renderStreak();
-    streakModal.classList.add('hidden');
+  list.sort(bySort);
+  return list;
+}
+
+/* =================== SES =================== */
+var actx = null;
+function tone(freqs, vol, dur){
+  try{
+    if(!actx) actx = new (window.AudioContext||window.webkitAudioContext)();
+    if(actx.state==='suspended') actx.resume();
+    var t0 = actx.currentTime;
+    freqs.forEach(function(f,i){
+      var o=actx.createOscillator(), g=actx.createGain();
+      o.type='sine'; o.frequency.value=f;
+      var s=t0+i*0.085;
+      g.gain.setValueAtTime(0,s);
+      g.gain.linearRampToValueAtTime(vol,s+0.015);
+      g.gain.exponentialRampToValueAtTime(0.0001,s+dur);
+      o.connect(g); g.connect(actx.destination);
+      o.start(s); o.stop(s+dur+0.05);
+    });
+  }catch(e){}
+}
+function sChime(){ tone([880,1108.7,1318.5],0.15,0.55); }
+function sTick(){ tone([520],0.06,0.12); }
+function sOpen(){ tone([523.25,659.25,783.99],0.09,0.7); }
+
+/* =================== RENDER =================== */
+function renderTop(){
+  var n = new Date();
+  document.getElementById('topDate').textContent = n.getDate()+' '+MONTHS[n.getMonth()]+', '+JS2TR[n.getDay()];
+  document.getElementById('topGreeting').textContent = GREETINGS[n.getHours() % GREETINGS.length];
+}
+
+function renderStreak(){
+  var numEl=document.getElementById('streakNumber'), sufEl=document.getElementById('streakSuffix');
+  if(!cloud.startDate){ numEl.textContent='—'; sufEl.textContent=''; return; }
+  var s=new Date(cloud.startDate+'T00:00:00'), n=new Date();
+  var d=Math.floor((new Date(n.getFullYear(),n.getMonth(),n.getDate()) - new Date(s.getFullYear(),s.getMonth(),s.getDate()))/86400000)+1;
+  if(d<1) d=1;
+  numEl.textContent=d; sufEl.textContent='gün';
+}
+
+function kindBadge(kind){
+  if(kind==='school') return '<span class="text-[10px] px-1.5 py-0.5 rounded-md" style="background:rgba(201,162,75,.16); color:var(--gold);">ders</span>';
+  if(kind==='rec') return '<span class="text-[10px] px-1.5 py-0.5 rounded-md" style="background:rgba(255,255,255,.08); color:var(--text-dim);">her gün</span>';
+  return '';
+}
+
+function rowHTML(t, opts){
+  opts = opts || {};
+  var isDone = !!done[t.id];
+  var check = opts.noCheck ? '' : (isDone
+    ? '<button data-toggle="'+t.id+'" data-val="0" class="press w-9 h-9 rounded-full flex items-center justify-center shrink-0 btn-primary"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></button>'
+    : '<button data-toggle="'+t.id+'" data-val="1" class="press w-9 h-9 rounded-full shrink-0 border border-white/15"></button>');
+  var thumb = t.image ? '<img src="'+t.image+'" class="w-10 h-10 rounded-xl object-cover shrink-0 border border-white/10" alt="">' : '';
+  var attr = opts.editable ? ' data-edit="'+t.id+'" data-kind="'+(opts.kind||t.kind)+'" data-day="'+opts.day+'"' : '';
+  return '<div class="glass rounded-2xl px-4 py-3.5 flex items-center gap-3"'+attr+'>'
+    + check + thumb
+    + '<div class="flex-1 min-w-0">'
+      + '<div class="flex items-center gap-2"><p class="text-[14.5px] font-medium truncate '+(isDone&&!opts.noCheck?'strike':'')+'">'+esc(t.title)+'</p>'+kindBadge(t.kind)+'</div>'
+      + '<p class="text-[12px] text-[var(--text-dimmer)] mt-0.5">'+t.start+' – '+t.end+'</p>'
+    + '</div></div>';
+}
+
+function renderLive(){
+  var n=new Date();
+  document.getElementById('liveClock').textContent = String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
+  document.getElementById('liveDayLabel').textContent = JS2TR[n.getDay()];
+
+  // not
+  var nw=document.getElementById('noteWrap');
+  nw.innerHTML = cloud.note
+    ? '<div class="glass rounded-2xl px-4 py-4 fade-up" style="border-color:rgba(224,16,31,.3);"><p class="text-[11px] uppercase mb-1.5" style="letter-spacing:.1em; color:var(--accent-2);">arda\'dan not</p><p class="text-[14.5px] leading-relaxed">'+esc(cloud.note)+'</p></div>'
+    : '';
+
+  var nowMin = n.getHours()*60+n.getMinutes();
+  var items = todaysItems();
+  var cur=null, next=null;
+  items.forEach(function(t){
+    var s=toMin(t.start), e=toMin(t.end);
+    if(nowMin>=s && nowMin<e && !cur) cur=t;
+    if(s>nowMin && (!next || s<toMin(next.start))) next=t;
   });
 
-  /* ============ SEKME GEÇİŞİ ============ */
-  function refreshCurrentScreen(){
-    if(state.activeTab === 'live') renderLive(); else renderWeeklyList();
+  var cw=document.getElementById('currentTaskWrap');
+  if(cur){
+    var isDone=!!done[cur.id];
+    cw.innerHTML = '<div class="glass-strong rounded-[28px] p-6 relative overflow-hidden hero-in">'
+      +'<div class="absolute -top-10 -right-10 w-40 h-40 rounded-full" style="background:radial-gradient(circle, rgba(224,16,31,.28), transparent 70%);"></div>'
+      +(cur.image?'<img src="'+cur.image+'" class="w-full h-40 object-cover rounded-2xl mb-4 relative border border-white/10" alt="">':'')
+      +'<div class="flex items-center gap-2 mb-3 relative"><span class="w-2 h-2 rounded-full pulse-dot" style="background:var(--accent-2);"></span>'
+      +'<span class="text-[12.5px] font-medium" style="color:var(--accent-2);">şu an bunu yapıyor olman lazım, bir tanem</span></div>'
+      +'<h3 class="serif font-semibold leading-snug mb-3 relative '+(isDone?'strike':'')+'" style="font-size:25px;">'+esc(cur.title)+'</h3>'
+      +'<span class="text-[13.5px] text-[var(--text-dim)] relative">'+cur.start+' – '+cur.end+' · '+(toMin(cur.end)-nowMin)+' dk kaldı</span>'
+      +'<div class="flex gap-2.5 mt-5 relative">'
+        +'<button data-toggle="'+cur.id+'" data-val="1" class="press flex-1 rounded-2xl py-3 text-[14px] font-semibold btn-primary">Yapıldı ✅</button>'
+        +'<button data-toggle="'+cur.id+'" data-val="0" class="press flex-1 rounded-2xl py-3 text-[14px] font-semibold bg-white/5 border border-white/10">Yapılmadı ❌</button>'
+      +'</div></div>';
+  } else {
+    cw.innerHTML = '<div class="glass rounded-[28px] p-6 text-center hero-in"><p class="text-[28px] mb-2">☾</p>'
+      +'<p class="text-[14.5px] text-[var(--text-dim)] leading-relaxed">'+IDLE[n.getMinutes()%IDLE.length]+'</p></div>';
   }
 
-  function setTab(tab){
-    state.activeTab = tab;
-    document.getElementById('screen-live').classList.toggle('hidden', tab !== 'live');
-    document.getElementById('screen-weekly').classList.toggle('hidden', tab !== 'weekly');
-    document.getElementById('addTaskBtn').classList.toggle('hidden', tab !== 'weekly');
-    document.querySelectorAll('.tab-btn').forEach(function(b){
-      b.style.color = (b.getAttribute('data-tab') === tab) ? 'var(--accent-2)' : 'var(--text-dim)';
-    });
-    if(tab === 'live') renderLive(); else { renderDayChips(); renderWeeklyList(); }
-  }
+  var nx=document.getElementById('nextTaskWrap');
+  nx.innerHTML = next
+    ? '<div class="glass rounded-2xl px-4 py-3.5 flex items-center justify-between fade-up"><div><p class="text-[11.5px] text-[var(--text-dimmer)] mb-0.5">sırada</p><p class="text-[14px] font-medium">'+esc(next.title)+'</p></div><span class="text-[13px] text-[var(--text-dim)]">'+next.start+'</span></div>'
+    : '';
 
+  var list=document.getElementById('todayList');
+  document.getElementById('todayCount').textContent = items.length ? items.length+' madde' : '';
+  list.innerHTML = items.length
+    ? items.map(function(t){ return rowHTML(t,{}); }).join('')
+    : '<div class="glass rounded-2xl px-4 py-6 text-center"><p class="text-[13.5px] text-[var(--text-dimmer)]">'+(loaded?'Bugün için bir şey yok.':'Yükleniyor…')+'</p></div>';
+}
+
+function chipsHTML(sel, attr){
+  return DAYS.map(function(d){
+    var a = d===sel;
+    return '<button '+attr+'="'+d+'" class="day-chip press shrink-0 rounded-2xl px-4 py-2.5 text-[13.5px] font-medium '+(a?'btn-primary':'glass')+'">'+d+'</button>';
+  }).join('');
+}
+
+function renderPlans(){
+  document.getElementById('planChips').innerHTML = chipsHTML(localState.planDay,'data-planday');
+  var arr=(cloud.plans[localState.planDay]||[]).slice().sort(bySort);
+  document.getElementById('planList').innerHTML = arr.length
+    ? arr.map(function(t){ return rowHTML(Object.assign({},t,{kind:'plan'}),{}); }).join('')
+    : '<div class="glass rounded-2xl px-4 py-8 text-center"><p class="text-[13.5px] text-[var(--text-dimmer)]">'+localState.planDay+' için planın yok.</p></div>';
+}
+
+function renderSchool(){
+  document.getElementById('schoolChips').innerHTML = chipsHTML(localState.schoolDay,'data-schoolday');
+  var arr=(cloud.school[localState.schoolDay]||[]).slice().sort(bySort);
+  document.getElementById('schoolList').innerHTML = arr.length
+    ? arr.map(function(t){ return rowHTML(Object.assign({},t,{kind:'school'}),{noCheck:true}); }).join('')
+    : '<div class="glass rounded-2xl px-4 py-8 text-center"><p class="text-[13.5px] text-[var(--text-dimmer)]">'+localState.schoolDay+' için ders yok.</p></div>';
+}
+
+function renderAll(){
+  renderTop(); renderStreak();
+  if(localState.tab==='live') renderLive();
+  else if(localState.tab==='plans') renderPlans();
+  else renderSchool();
+}
+
+/* =================== KONFETİ =================== */
+function confetti(){
+  var colors=['#e0101f','#ff4650','#f4f3f0','#c9a24b'];
+  for(var i=0;i<46;i++){
+    (function(){
+      var el=document.createElement('div'), sz=5+Math.random()*6;
+      el.className='confetti-piece';
+      el.style.left=Math.random()*100+'vw';
+      el.style.width=sz+'px'; el.style.height=(sz*0.4+3)+'px';
+      el.style.background=colors[Math.floor(Math.random()*colors.length)];
+      var dur=1.6+Math.random()*1.1;
+      el.style.animation='confettiFall '+dur+'s cubic-bezier(.37,0,.63,1) forwards';
+      el.style.animationDelay=(Math.random()*0.25)+'s';
+      document.body.appendChild(el);
+      setTimeout(function(){ el.remove(); },(dur+0.4)*1000);
+    })();
+  }
+}
+
+/* =================== ETKİLEŞİM =================== */
+document.body.addEventListener('click', function(e){
+  var tg=e.target.closest('[data-toggle]');
+  if(tg && !e.target.closest('#adminPanel')){
+    var id=tg.getAttribute('data-toggle'), val=tg.getAttribute('data-val')==='1';
+    setDone(id,val);
+    if(val){ confetti(); sChime(); } else { sTick(); }
+    return;
+  }
+  var cl=e.target.closest('[data-close]');
+  if(cl){ document.getElementById(cl.getAttribute('data-close')).classList.add('hidden'); return; }
+  var pd=e.target.closest('[data-planday]');
+  if(pd){ localState.planDay=pd.getAttribute('data-planday'); sTick(); renderPlans(); return; }
+  var sd=e.target.closest('[data-schoolday]');
+  if(sd){ localState.schoolDay=sd.getAttribute('data-schoolday'); sTick(); renderSchool(); return; }
+});
+
+function setTab(tab){
+  localState.tab=tab;
+  document.getElementById('screen-live').classList.toggle('hidden', tab!=='live');
+  document.getElementById('screen-plans').classList.toggle('hidden', tab!=='plans');
+  document.getElementById('screen-school').classList.toggle('hidden', tab!=='school');
   document.querySelectorAll('.tab-btn').forEach(function(b){
-    b.addEventListener('click', function(){ setTab(b.getAttribute('data-tab')); });
+    b.style.color = b.getAttribute('data-tab')===tab ? 'var(--accent-2)' : 'var(--text-dim)';
   });
+  renderAll();
+}
+document.querySelectorAll('.tab-btn').forEach(function(b){
+  b.addEventListener('click', function(){ sTick(); setTab(b.getAttribute('data-tab')); });
+});
 
-  /* ============ GÜN SEÇİMİ (DELEGE) ============ */
-  document.getElementById('dayChips').addEventListener('click', function(e){
-    var chip = e.target.closest('[data-day-chip]');
-    if(!chip) return;
-    state.selectedDay = chip.getAttribute('data-day-chip');
-    renderDayChips();
-    renderWeeklyList();
+/* =================== BİLDİRİM =================== */
+var notifOn = localStorage.getItem('tk-notif')==='1';
+var notifModal=document.getElementById('notifModal');
+document.getElementById('bellBtn').addEventListener('click', function(){ updateNotifUI(); notifModal.classList.remove('hidden'); });
+function updateNotifUI(){
+  var d=document.getElementById('notifDesc'), b=document.getElementById('notifEnableBtn');
+  if(!('Notification' in window)){ d.textContent='Bu tarayıcı bildirim desteklemiyor.'; b.classList.add('hidden'); return; }
+  b.classList.remove('hidden');
+  if(Notification.permission==='granted' && notifOn){ d.textContent='Hatırlatmalar açık.'; b.textContent='Kapat'; }
+  else if(Notification.permission==='denied'){ d.textContent='İzin engellenmiş. Safari site ayarlarından açabilirsin.'; b.classList.add('hidden'); }
+  else { d.textContent='Görev saati geldiğinde uygulama açıkken haber verelim mi?'; b.textContent='İzin ver'; }
+}
+document.getElementById('notifEnableBtn').addEventListener('click', function(){
+  if(notifOn){ notifOn=false; localStorage.setItem('tk-notif','0'); updateNotifUI(); updateBell(); return; }
+  Notification.requestPermission().then(function(p){
+    if(p==='granted'){ notifOn=true; localStorage.setItem('tk-notif','1'); new Notification(APP_NAME,{body:'Hatırlatmalar açık 🤍'}); }
+    updateNotifUI(); updateBell();
   });
-
-  document.getElementById('weeklyList').addEventListener('click', function(e){
-    var row = e.target.closest('[data-edit]');
-    if(!row) return;
-    if(e.target.closest('[data-done]') || e.target.closest('[data-undone]')) return;
-    openTaskModal(row.getAttribute('data-edit'), row.getAttribute('data-editday'));
-  });
-
-  /* ============ GÖREV MODAL ============ */
-  var modal = document.getElementById('taskModal');
-  var daySelect = document.getElementById('taskDayInput');
-  daySelect.innerHTML = DAYS.map(function(d){ return '<option value="'+d+'">'+d+'</option>'; }).join('');
-
-  var currentTaskImage = null;
-
-  function setImagePreview(dataUrl){
-    currentTaskImage = dataUrl || null;
-    var emptyBox = document.getElementById('taskImageEmpty');
-    var previewWrap = document.getElementById('taskImagePreviewWrap');
-    if(currentTaskImage){
-      document.getElementById('taskImagePreview').src = currentTaskImage;
-      emptyBox.classList.add('hidden');
-      previewWrap.classList.remove('hidden');
-    } else {
-      emptyBox.classList.remove('hidden');
-      previewWrap.classList.add('hidden');
-      document.getElementById('taskImageInput').value = '';
+});
+function updateBell(){
+  document.getElementById('bellIcon').style.color =
+    (notifOn && 'Notification' in window && Notification.permission==='granted') ? 'var(--accent-2)' : '';
+}
+function checkNotif(){
+  if(!notifOn || !('Notification' in window) || Notification.permission!=='granted') return;
+  var n=new Date(), s=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
+  var fired={}; try{ fired=JSON.parse(sessionStorage.getItem('tk-fired')||'{}'); }catch(e){}
+  todaysItems().forEach(function(t){
+    if(t.start===s){
+      var k=todayKey()+'-'+t.id;
+      if(!fired[k]){
+        new Notification(APP_NAME,{body:'Saat '+t.start+', "'+t.title+'" zamanı geldi bir tanem 🤍'});
+        fired[k]=true; sessionStorage.setItem('tk-fired',JSON.stringify(fired));
+      }
     }
-  }
+  });
+}
 
-  function openTaskModal(taskId, day){
-    document.getElementById('modalError').classList.add('hidden');
-    if(taskId){
-      var t = state.data.tasks[day].find(function(x){ return x.id === taskId; });
-      state.editingTaskId = taskId;
-      state.editingDay = day;
-      document.getElementById('modalTitle').textContent = 'Görevi düzenle';
-      daySelect.value = day;
-      document.getElementById('taskTitleInput').value = t.title;
-      document.getElementById('taskStartInput').value = t.start;
-      document.getElementById('taskEndInput').value = t.end;
-      document.getElementById('deleteTaskBtn').classList.remove('hidden');
-      setImagePreview(t.image || null);
-    } else {
-      state.editingTaskId = null;
-      state.editingDay = null;
-      document.getElementById('modalTitle').textContent = 'Yeni görev';
-      daySelect.value = state.selectedDay;
-      document.getElementById('taskTitleInput').value = '';
-      document.getElementById('taskStartInput').value = '';
-      document.getElementById('taskEndInput').value = '';
-      document.getElementById('deleteTaskBtn').classList.add('hidden');
-      setImagePreview(null);
-    }
-    modal.classList.remove('hidden');
+/* =================== ADMİN GİRİŞİ (gizli) =================== */
+var tapCount=0, tapTimer=null;
+document.getElementById('headerTapZone').addEventListener('click', function(){
+  tapCount++;
+  clearTimeout(tapTimer);
+  tapTimer=setTimeout(function(){ tapCount=0; }, 1200);
+  if(tapCount>=5){
+    tapCount=0;
+    document.getElementById('pinInput').value='';
+    document.getElementById('pinModal').classList.remove('hidden');
+    setTimeout(function(){ document.getElementById('pinInput').focus(); },200);
   }
+});
+document.getElementById('pinSubmit').addEventListener('click', tryPin);
+document.getElementById('pinInput').addEventListener('keydown', function(e){ if(e.key==='Enter') tryPin(); });
+function tryPin(){
+  if(document.getElementById('pinInput').value.trim()===ADMIN_PIN){
+    document.getElementById('pinModal').classList.add('hidden');
+    openAdmin();
+  } else {
+    var i=document.getElementById('pinInput');
+    i.value=''; i.placeholder='hatalı';
+  }
+}
 
-  function resizeImageFile(file, maxSize, quality, cb){
-    var reader = new FileReader();
-    reader.onload = function(e){
-      var img = new Image();
-      img.onload = function(){
-        var w = img.width, h = img.height;
-        if(w > h && w > maxSize){ h = Math.round(h * maxSize / w); w = maxSize; }
-        else if(h > maxSize){ w = Math.round(w * maxSize / h); h = maxSize; }
-        var canvas = document.createElement('canvas');
-        canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        cb(canvas.toDataURL('image/jpeg', quality));
-      };
-      img.src = e.target.result;
+/* =================== ADMİN PANELİ =================== */
+var adminOpen=false, adminTab='plans';
+var adminPlanDay=JS2TR[new Date().getDay()], adminSchoolDay=JS2TR[new Date().getDay()];
+
+function openAdmin(){ adminOpen=true; sOpen(); document.getElementById('adminPanel').classList.remove('hidden'); renderAdmin(); }
+document.getElementById('adminClose').addEventListener('click', function(){ adminOpen=false; document.getElementById('adminPanel').classList.add('hidden'); });
+
+document.querySelectorAll('.atab').forEach(function(b){
+  b.addEventListener('click', function(){
+    adminTab=b.getAttribute('data-atab'); sTick();
+    document.querySelectorAll('.atab').forEach(function(x){
+      var on = x.getAttribute('data-atab')===adminTab;
+      x.className = 'atab press flex-1 rounded-2xl py-3 text-[13.5px] font-medium '+(on?'btn-primary':'glass');
+    });
+    document.getElementById('atab-plans').classList.toggle('hidden', adminTab!=='plans');
+    document.getElementById('atab-school').classList.toggle('hidden', adminTab!=='school');
+    document.getElementById('atab-extra').classList.toggle('hidden', adminTab!=='extra');
+    renderAdmin();
+  });
+});
+
+function renderAdmin(){
+  document.getElementById('adminPlanChips').innerHTML = DAYS.map(function(d){
+    return '<button data-aplanday="'+d+'" class="day-chip press shrink-0 rounded-2xl px-3.5 py-2 text-[13px] font-medium '+(d===adminPlanDay?'btn-primary':'glass')+'">'+d.slice(0,3)+'</button>';
+  }).join('');
+  var pa=(cloud.plans[adminPlanDay]||[]).slice().sort(bySort);
+  document.getElementById('adminPlanList').innerHTML = pa.length
+    ? pa.map(function(t){ return rowHTML(Object.assign({},t,{kind:'plan'}),{noCheck:true,editable:true,kind:'plan',day:adminPlanDay}); }).join('')
+    : '<div class="glass rounded-2xl px-4 py-6 text-center"><p class="text-[13px] text-[var(--text-dimmer)]">Boş</p></div>';
+
+  document.getElementById('adminSchoolChips').innerHTML = DAYS.map(function(d){
+    return '<button data-aschoolday="'+d+'" class="day-chip press shrink-0 rounded-2xl px-3.5 py-2 text-[13px] font-medium '+(d===adminSchoolDay?'btn-primary':'glass')+'">'+d.slice(0,3)+'</button>';
+  }).join('');
+  var sa=(cloud.school[adminSchoolDay]||[]).slice().sort(bySort);
+  document.getElementById('adminSchoolList').innerHTML = sa.length
+    ? sa.map(function(t){ return rowHTML(Object.assign({},t,{kind:'school'}),{noCheck:true,editable:true,kind:'school',day:adminSchoolDay}); }).join('')
+    : '<div class="glass rounded-2xl px-4 py-6 text-center"><p class="text-[13px] text-[var(--text-dimmer)]">Boş</p></div>';
+
+  document.getElementById('noteInput').value = cloud.note || '';
+  document.getElementById('startDateInput').value = cloud.startDate || '';
+  document.getElementById('recurringList').innerHTML = cloud.recurring.length
+    ? cloud.recurring.map(function(r){
+        return '<div class="glass rounded-xl px-3 py-2.5 flex items-center gap-2"><span class="text-[12.5px] text-[var(--text-dim)] w-11">'+r.time+'</span><span class="text-[13.5px] flex-1 truncate">'+esc(r.title)+'</span><button data-recdel="'+r.id+'" class="press w-7 h-7 rounded-lg flex items-center justify-center bg-white/5"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ff8189" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>';
+      }).join('')
+    : '<p class="text-[12.5px] text-[var(--text-dimmer)]">Yok</p>';
+}
+
+document.getElementById('adminPanel').addEventListener('click', function(e){
+  var p=e.target.closest('[data-aplanday]');
+  if(p){ adminPlanDay=p.getAttribute('data-aplanday'); sTick(); renderAdmin(); return; }
+  var s=e.target.closest('[data-aschoolday]');
+  if(s){ adminSchoolDay=s.getAttribute('data-aschoolday'); sTick(); renderAdmin(); return; }
+  var rd=e.target.closest('[data-recdel]');
+  if(rd){
+    var id=rd.getAttribute('data-recdel');
+    cloud.recurring = cloud.recurring.filter(function(x){ return x.id!==id; });
+    saveCloud({ recurring: cloud.recurring });
+    return;
+  }
+  var ed=e.target.closest('[data-edit]');
+  if(ed){ openEdit(ed.getAttribute('data-kind'), ed.getAttribute('data-day'), ed.getAttribute('data-edit')); return; }
+});
+
+document.getElementById('adminAddPlan').addEventListener('click', function(){ openEdit('plan', adminPlanDay, null); });
+document.getElementById('adminAddSchool').addEventListener('click', function(){ openEdit('school', adminSchoolDay, null); });
+
+document.getElementById('noteSaveBtn').addEventListener('click', function(){
+  saveCloud({ note: document.getElementById('noteInput').value.trim() });
+  sChime();
+});
+document.getElementById('startDateSaveBtn').addEventListener('click', function(){
+  var v=document.getElementById('startDateInput').value;
+  if(v){ saveCloud({ startDate: v }); sChime(); }
+});
+document.getElementById('recAddBtn').addEventListener('click', function(){
+  var t=document.getElementById('recTime').value, n=document.getElementById('recTitle').value.trim();
+  if(!t||!n) return;
+  cloud.recurring.push({ id:'rec-'+uid(), title:n, time:t });
+  saveCloud({ recurring: cloud.recurring });
+  document.getElementById('recTitle').value=''; document.getElementById('recTime').value='';
+  sChime();
+});
+
+/* ---- toplu ekleme ---- */
+function parseBulk(text){
+  var out=[];
+  text.split('\n').forEach(function(line){
+    line=line.trim(); if(!line) return;
+    var parts=line.split('|').map(function(x){ return x.trim(); });
+    if(parts.length<3) return;
+    var day=parts[0], time=parts[1], title=parts.slice(2).join(' | ');
+    var m=time.match(/(\d{1,2})[:.](\d{2})\s*[-–—]\s*(\d{1,2})[:.](\d{2})/);
+    if(!m) return;
+    var match=DAYS.find(function(d){ return d.toLowerCase().indexOf(day.toLowerCase().slice(0,4))===0; });
+    if(!match) return;
+    out.push({ day:match, item:{
+      id:uid(), title:title,
+      start:String(m[1]).padStart(2,'0')+':'+m[2],
+      end:String(m[3]).padStart(2,'0')+':'+m[4]
+    }});
+  });
+  return out;
+}
+function applyBulk(which, textareaId){
+  var rows=parseBulk(document.getElementById(textareaId).value);
+  if(!rows.length){ alert('Hiçbir satır okunamadı. Format: Gün | 09:00-10:30 | Başlık'); return; }
+  var target = which==='plan' ? cloud.plans : cloud.school;
+  rows.forEach(function(r){ if(!target[r.day]) target[r.day]=[]; target[r.day].push(r.item); });
+  var patch={}; patch[which==='plan'?'plans':'school']=target;
+  saveCloud(patch);
+  document.getElementById(textareaId).value='';
+  sChime();
+  alert(rows.length+' satır eklendi.');
+}
+document.getElementById('bulkPlanBtn').addEventListener('click', function(){ applyBulk('plan','bulkPlan'); });
+document.getElementById('bulkSchoolBtn').addEventListener('click', function(){ applyBulk('school','bulkSchool'); });
+document.getElementById('clearSchoolBtn').addEventListener('click', function(){
+  if(!confirm('Tüm ders programı silinsin mi?')) return;
+  var empty={}; DAYS.forEach(function(d){ empty[d]=[]; });
+  cloud.school=empty; saveCloud({ school: empty });
+});
+
+/* =================== EKLE / DÜZENLE =================== */
+var editCtx={ kind:'plan', day:null, id:null, image:null };
+var editModal=document.getElementById('editModal');
+document.getElementById('editDay').innerHTML = DAYS.map(function(d){ return '<option>'+d+'</option>'; }).join('');
+
+function setImg(url){
+  editCtx.image = url || null;
+  document.getElementById('imgEmpty').classList.toggle('hidden', !!url);
+  document.getElementById('imgPrev').classList.toggle('hidden', !url);
+  if(url) document.getElementById('imgPrevEl').src=url;
+  else document.getElementById('editImageInput').value='';
+}
+
+function openEdit(kind, day, id){
+  editCtx.kind=kind; editCtx.day=day; editCtx.id=id;
+  document.getElementById('editError').classList.add('hidden');
+  document.getElementById('imageSection').classList.toggle('hidden', kind==='school');
+  document.getElementById('editTitleLabel').textContent = kind==='school' ? 'Ders adı' : 'Başlık';
+  document.getElementById('editName').placeholder = kind==='school' ? 'Örn. Matematik' : 'Örn. Arda ile buluş';
+  document.getElementById('editDay').value = day;
+  if(id){
+    var arr=(kind==='plan'?cloud.plans:cloud.school)[day]||[];
+    var t=arr.find(function(x){ return x.id===id; }) || {};
+    document.getElementById('editTitle').textContent='Düzenle';
+    document.getElementById('editName').value=t.title||'';
+    document.getElementById('editStart').value=t.start||'';
+    document.getElementById('editEnd').value=t.end||'';
+    document.getElementById('editDelete').classList.remove('hidden');
+    setImg(t.image||null);
+  } else {
+    document.getElementById('editTitle').textContent = kind==='school' ? 'Ders ekle' : 'Plan ekle';
+    document.getElementById('editName').value='';
+    document.getElementById('editStart').value='';
+    document.getElementById('editEnd').value='';
+    document.getElementById('editDelete').classList.add('hidden');
+    setImg(null);
+  }
+  editModal.classList.remove('hidden');
+}
+
+function resizeImg(file, max, q, cb){
+  var r=new FileReader();
+  r.onload=function(e){
+    var img=new Image();
+    img.onload=function(){
+      var w=img.width,h=img.height;
+      if(w>h&&w>max){ h=Math.round(h*max/w); w=max; }
+      else if(h>max){ w=Math.round(w*max/h); h=max; }
+      var c=document.createElement('canvas'); c.width=w; c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      cb(c.toDataURL('image/jpeg',q));
     };
-    reader.readAsDataURL(file);
+    img.src=e.target.result;
+  };
+  r.readAsDataURL(file);
+}
+document.getElementById('imgEmpty').addEventListener('click', function(){ document.getElementById('editImageInput').click(); });
+document.getElementById('imgPrevEl').addEventListener('click', function(){ document.getElementById('editImageInput').click(); });
+document.getElementById('imgRemove').addEventListener('click', function(e){ e.stopPropagation(); setImg(null); });
+document.getElementById('editImageInput').addEventListener('change', function(e){
+  var f=e.target.files&&e.target.files[0]; if(!f) return;
+  resizeImg(f,700,0.65,function(u){ setImg(u); });
+});
+
+document.getElementById('editSave').addEventListener('click', function(){
+  var day=document.getElementById('editDay').value;
+  var title=document.getElementById('editName').value.trim();
+  var st=document.getElementById('editStart').value;
+  var en=document.getElementById('editEnd').value;
+  var err=document.getElementById('editError');
+  if(!title||!st||!en){ err.textContent='Başlık ve saatleri doldur.'; err.classList.remove('hidden'); return; }
+  if(toMin(en)<=toMin(st)){ err.textContent='Bitiş, başlangıçtan sonra olmalı.'; err.classList.remove('hidden'); return; }
+  err.classList.add('hidden');
+
+  var store = editCtx.kind==='plan' ? cloud.plans : cloud.school;
+  DAYS.forEach(function(d){ if(!store[d]) store[d]=[]; });
+
+  if(editCtx.id){
+    store[editCtx.day] = store[editCtx.day].filter(function(x){ return x.id!==editCtx.id; });
+    store[day].push({ id:editCtx.id, title:title, start:st, end:en, image: editCtx.kind==='plan' ? (editCtx.image||null) : null });
+  } else {
+    store[day].push({ id:uid(), title:title, start:st, end:en, image: editCtx.kind==='plan' ? (editCtx.image||null) : null });
   }
+  var patch={}; patch[editCtx.kind==='plan'?'plans':'school']=store;
+  saveCloud(patch);
+  editModal.classList.add('hidden');
+  sChime();
+});
 
-  document.getElementById('taskImageEmpty').addEventListener('click', function(){
-    document.getElementById('taskImageInput').click();
-  });
-  document.getElementById('taskImagePreviewWrap').addEventListener('click', function(e){
-    if(e.target.closest('#taskImageRemoveBtn')) return;
-    document.getElementById('taskImageInput').click();
-  });
-  document.getElementById('taskImageInput').addEventListener('change', function(e){
-    var file = e.target.files && e.target.files[0];
-    if(!file) return;
-    resizeImageFile(file, 900, 0.72, function(dataUrl){ setImagePreview(dataUrl); });
-  });
-  document.getElementById('taskImageRemoveBtn').addEventListener('click', function(e){
-    e.stopPropagation();
-    setImagePreview(null);
-  });
+document.getElementById('editDelete').addEventListener('click', function(){
+  if(!editCtx.id) return;
+  var store = editCtx.kind==='plan' ? cloud.plans : cloud.school;
+  store[editCtx.day] = (store[editCtx.day]||[]).filter(function(x){ return x.id!==editCtx.id; });
+  var patch={}; patch[editCtx.kind==='plan'?'plans':'school']=store;
+  saveCloud(patch);
+  editModal.classList.add('hidden');
+});
 
-  function closeTaskModal(){ modal.classList.add('hidden'); }
+/* =================== BAŞLAT =================== */
+setInterval(function(){ renderTop(); renderStreak(); if(localState.tab==='live') renderLive(); checkNotif(); }, 15000);
+renderTop(); renderStreak(); updateBell(); setTab('live');
 
-  document.getElementById('addTaskBtn').addEventListener('click', function(){ openTaskModal(null,null); });
-  document.getElementById('modalBackdrop').addEventListener('click', closeTaskModal);
-
-  document.getElementById('saveTaskBtn').addEventListener('click', function(){
-    var day = daySelect.value;
-    var title = document.getElementById('taskTitleInput').value.trim();
-    var start = document.getElementById('taskStartInput').value;
-    var end = document.getElementById('taskEndInput').value;
-    var errEl = document.getElementById('modalError');
-
-    if(!title || !start || !end){
-      errEl.textContent = 'Lütfen görev adı, başlangıç ve bitiş saatini gir.';
-      errEl.classList.remove('hidden'); return;
-    }
-    if(toMinutes(end) <= toMinutes(start)){
-      errEl.textContent = 'Bitiş saati başlangıçtan sonra olmalı.';
-      errEl.classList.remove('hidden'); return;
-    }
-    errEl.classList.add('hidden');
-
-    if(state.editingTaskId){
-      if(state.editingDay !== day){
-        var oldDone = false;
-        var existing = state.data.tasks[state.editingDay].find(function(x){ return x.id === state.editingTaskId; });
-        if(existing) oldDone = existing.done;
-        state.data.tasks[state.editingDay] = state.data.tasks[state.editingDay].filter(function(x){ return x.id !== state.editingTaskId; });
-        state.data.tasks[day].push({ id: state.editingTaskId, title:title, start:start, end:end, done:oldDone, image: currentTaskImage });
-      } else {
-        var t = state.data.tasks[day].find(function(x){ return x.id === state.editingTaskId; });
-        t.title = title; t.start = start; t.end = end; t.image = currentTaskImage;
-      }
-    } else {
-      state.data.tasks[day].push({ id: uid(), title:title, start:start, end:end, done:false, image: currentTaskImage });
-    }
-    sortDay(day);
-    saveData();
-    closeTaskModal();
-    state.selectedDay = day;
-    renderDayChips();
-    renderWeeklyList();
-  });
-
-  document.getElementById('deleteTaskBtn').addEventListener('click', function(){
-    if(!state.editingTaskId) return;
-    state.data.tasks[state.editingDay] = state.data.tasks[state.editingDay].filter(function(x){ return x.id !== state.editingTaskId; });
-    saveData();
-    closeTaskModal();
-    renderWeeklyList();
-  });
-
-  /* ============ BİLDİRİM AYARLARI ============ */
-  var notifModal = document.getElementById('notifModal');
-  document.getElementById('bellBtn').addEventListener('click', function(){
-    updateNotifModalText();
-    notifModal.classList.remove('hidden');
-  });
-  document.getElementById('notifBackdrop').addEventListener('click', function(){ notifModal.classList.add('hidden'); });
-  document.getElementById('notifCloseBtn').addEventListener('click', function(){ notifModal.classList.add('hidden'); });
-
-  function updateNotifModalText(){
-    var desc = document.getElementById('notifDesc');
-    var enableBtn = document.getElementById('notifEnableBtn');
-    if(!('Notification' in window)){
-      desc.textContent = 'Bu tarayıcı bildirimleri desteklemiyor, ama uygulama içindeki canlı takip her zaman çalışır.';
-      enableBtn.classList.add('hidden');
-      return;
-    }
-    if(Notification.permission === 'granted' && state.data.notifEnabled){
-      desc.textContent = 'Hatırlatmalar açık. Görev saati geldiğinde, bu sayfa açıkken bildirim göndereceğim.';
-      enableBtn.textContent = 'Hatırlatmaları kapat';
-    } else if(Notification.permission === 'denied'){
-      desc.textContent = 'Bildirim izni tarayıcı ayarlarından engellenmiş. Site ayarlarından izin verirsen tekrar açabiliriz.';
-      enableBtn.classList.add('hidden');
-    } else {
-      desc.textContent = 'Görev saati geldiğinde bu sayfa açıkken sana haber verelim mi? İzin ver, seni hiçbir şey kaçırmasın.';
-      enableBtn.textContent = 'İzin ver';
-      enableBtn.classList.remove('hidden');
-    }
-  }
-
-  document.getElementById('notifEnableBtn').addEventListener('click', function(){
-    if(state.data.notifEnabled){
-      state.data.notifEnabled = false; saveData(); updateNotifModalText(); updateBellIcon(); return;
-    }
-    Notification.requestPermission().then(function(perm){
-      if(perm === 'granted'){
-        state.data.notifEnabled = true; saveData();
-        new Notification(APP_NAME, { body: 'Hatırlatmalar açık, seni takip ediyorum 🤍' });
-      }
-      updateNotifModalText();
-      updateBellIcon();
-    });
-  });
-
-  function updateBellIcon(){
-    var icon = document.getElementById('bellIcon');
-    icon.style.color = (state.data.notifEnabled && Notification.permission === 'granted') ? 'var(--accent-2)' : 'currentColor';
-  }
-
-  /* ============ ZAMANLAYICI: bildirim kontrolü + canlı saat ============ */
-  function firedSet(){
-    try{ return JSON.parse(sessionStorage.getItem(NOTIF_KEY) || '{}'); }catch(e){ return {}; }
-  }
-  function markFired(key){
-    var f = firedSet(); f[key] = true; sessionStorage.setItem(NOTIF_KEY, JSON.stringify(f));
-  }
-
-  function checkNotifications(){
-    if(!state.data.notifEnabled || !('Notification' in window) || Notification.permission !== 'granted') return;
-    var now = new Date();
-    var todayName = JS_DAY_TO_TR[now.getDay()];
-    var hh = String(now.getHours()).padStart(2,'0');
-    var mm = String(now.getMinutes()).padStart(2,'0');
-    var nowStr = hh+':'+mm;
-    var todayKey = now.toDateString();
-    state.data.tasks[todayName].forEach(function(t){
-      if(t.start === nowStr){
-        var key = todayKey + '-' + t.id;
-        var fired = firedSet();
-        if(!fired[key]){
-          new Notification(APP_NAME, { body: 'Saat ' + t.start + ', "' + t.title + '" zamanı geldi bir tanem 🤍' });
-          markFired(key);
-        }
-      }
-    });
-  }
-
-  setInterval(function(){
-    renderTopBar();
-    renderStreak();
-    if(state.activeTab === 'live') renderLive();
-    checkNotifications();
-  }, 15000);
-
-  /* ============ BAŞLANGIÇ ============ */
-  renderTopBar();
-  renderStreak();
-  updateBellIcon();
-  setTab('live');
+window.addEventListener('load', function(){
+  setTimeout(function(){
+    document.getElementById('splash').classList.add('gone');
+    setTimeout(function(){ document.getElementById('splash').style.display='none'; }, 700);
+  }, 900);
+});
 
 })();
 </script>
