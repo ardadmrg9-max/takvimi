@@ -212,6 +212,12 @@
 
 </div>
 
+<!-- Ekranlarda + ekle (herkes kullanabilir) -->
+<button id="userAddBtn" class="press fixed z-40 right-5 rounded-full flex items-center justify-center shadow-2xl hidden"
+  style="width:60px;height:60px; bottom:calc(96px + env(safe-area-inset-bottom)); background:linear-gradient(145deg, var(--accent-2), var(--accent-deep)); box-shadow: 0 10px 30px -6px rgba(224,16,31,0.55);">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+</button>
+
 <!-- ALT NAV -->
 <nav class="fixed bottom-0 left-0 right-0 z-30 px-5 pb-[calc(0.9rem+env(safe-area-inset-bottom))] pt-3">
   <div class="max-w-md mx-auto glass-strong rounded-[24px] flex items-center justify-around py-2.5 px-2">
@@ -314,7 +320,8 @@
       <div class="glass rounded-2xl p-4 mb-4">
         <p class="text-[13px] font-semibold mb-2">Gün sayacı</p>
         <p class="text-[11.5px] text-[var(--text-dimmer)] mb-3">Başlangıç tarihi. Üstteki büyük rakam buna göre her gün artar.</p>
-        <input id="startDateInput" type="date" class="fld mb-3">
+        <input id="startDateInput" type="date" class="fld mb-3" style="min-height:48px; -webkit-appearance:auto;">
+        <p class="text-[11px] text-[var(--text-dimmer)] mb-3">Açılmıyorsa doğrudan tarih kutusuna dokun; iOS'ta rakamları kaydırarak da girebilirsin (GG/AA/YYYY).</p>
         <button id="startDateSaveBtn" class="press w-full rounded-2xl py-3 text-[13.5px] font-semibold btn-primary">Kaydet</button>
       </div>
 
@@ -631,7 +638,7 @@ function renderPlans(){
   document.getElementById('planChips').innerHTML = chipsHTML(localState.planDay,'data-planday');
   var arr=(cloud.plans[localState.planDay]||[]).slice().sort(bySort);
   document.getElementById('planList').innerHTML = arr.length
-    ? arr.map(function(t){ return rowHTML(Object.assign({},t,{kind:'plan'}),{}); }).join('')
+    ? arr.map(function(t){ return rowHTML(Object.assign({},t,{kind:'plan'}),{editable:true,kind:'plan',day:localState.planDay}); }).join('')
     : '<div class="glass rounded-2xl px-4 py-8 text-center"><p class="text-[13.5px] text-[var(--text-dimmer)]">'+localState.planDay+' için planın yok.</p></div>';
 }
 
@@ -684,6 +691,11 @@ document.body.addEventListener('click', function(e){
   if(pd){ localState.planDay=pd.getAttribute('data-planday'); sTick(); renderPlans(); return; }
   var sd=e.target.closest('[data-schoolday]');
   if(sd){ localState.schoolDay=sd.getAttribute('data-schoolday'); sTick(); renderSchool(); return; }
+  var ue=e.target.closest('[data-edit]');
+  if(ue && !e.target.closest('#adminPanel')){
+    openEdit(ue.getAttribute('data-kind'), ue.getAttribute('data-day'), ue.getAttribute('data-edit'));
+    return;
+  }
 });
 
 function setTab(tab){
@@ -691,6 +703,7 @@ function setTab(tab){
   document.getElementById('screen-live').classList.toggle('hidden', tab!=='live');
   document.getElementById('screen-plans').classList.toggle('hidden', tab!=='plans');
   document.getElementById('screen-school').classList.toggle('hidden', tab!=='school');
+  document.getElementById('userAddBtn').classList.toggle('hidden', tab==='live');
   document.querySelectorAll('.tab-btn').forEach(function(b){
     b.style.color = b.getAttribute('data-tab')===tab ? 'var(--accent-2)' : 'var(--text-dim)';
   });
@@ -698,6 +711,10 @@ function setTab(tab){
 }
 document.querySelectorAll('.tab-btn').forEach(function(b){
   b.addEventListener('click', function(){ sTick(); setTab(b.getAttribute('data-tab')); });
+});
+document.getElementById('userAddBtn').addEventListener('click', function(){
+  if(localState.tab==='plans') openEdit('plan', localState.planDay, null);
+  else if(localState.tab==='school') openEdit('school', localState.schoolDay, null);
 });
 
 /* =================== BİLDİRİM =================== */
@@ -836,6 +853,9 @@ document.getElementById('noteSaveBtn').addEventListener('click', function(){
 document.getElementById('startDateSaveBtn').addEventListener('click', function(){
   var v=document.getElementById('startDateInput').value;
   if(v){ saveCloud({ startDate: v }); sChime(); }
+});
+document.getElementById('startDateInput').addEventListener('click', function(){
+  try{ if(this.showPicker) this.showPicker(); }catch(e){}
 });
 document.getElementById('recAddBtn').addEventListener('click', function(){
   var t=document.getElementById('recTime').value, n=document.getElementById('recTitle').value.trim();
